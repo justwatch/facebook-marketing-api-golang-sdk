@@ -9,7 +9,7 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client/fb"
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
 // BatchMaxIDsSequence we upload
