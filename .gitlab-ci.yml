@@ -1,0 +1,45 @@
+variables:
+  GOCACHE: "/tmp/gocache"
+
+before_script:
+  - export SCHEMADIR=$(find . -maxdepth 1 -type d -name schema)
+
+stages:
+  - test
+
+goenv:
+  stage: test
+  tags:
+    - docker-builder-go1.12
+  script:
+    - make goenv
+    - echo "SCHEMADIR=${SCHEMADIR}"
+  after_script:
+    - make clean
+
+test-golint:
+  stage: test
+  tags:
+    - docker-builder-go1.12
+  script:
+    - make test-golint
+  after_script:
+    - make clean
+
+test-go-fmt:
+  stage: test
+  tags:
+    - docker-builder-go1.12
+  script:
+    - make test-go-fmt
+  after_script:
+    - make clean
+
+test-clang-format:
+  stage: test
+  tags:
+    - docker-builder-go1.12
+  script:
+    - make test-clang-format
+  after_script:
+    - make clean
