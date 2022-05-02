@@ -38,30 +38,27 @@ The SDK supports crud operations for the following entities:
 
 ## Usage
 
+We assume you already have a Facebook Developer account and configured an `accessToken` and `appSecret`. If not, checkout Facebooks [Get Started](https://developers.facebook.com/docs/marketing-apis/get-started)
+
 ### Create a new fbService client
 
 ```go
-fbService, err := v12.New(l, accessToken, appSecret)
+import(
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/marketing/v12"
+)
+
+func main(){
+	fbService, _ := v12.New(l, accessToken, appSecret)
+	
+	// [Code snippets from other example below go here]
+}
 ```
 
 ### Create a campaign
 
 ```go
 c := v12.Campaign{
-		ID:                  string(scg.ExternalID),
-		AccountID:           sa.ExternalID,
-		Name:                scg.ExternalName,
-		Status:              strings.ToUpper(scg.State),
-		SpendCap:            uint64(spendCap),
-		Objective:           strings.ToUpper(scg.Objective),
-		CanUseSpendCap:      scg.CanUseSpendCap,
-		BuyingType:          strings.ToUpper(scg.BudgetType),
-		StartTime:           fb.Time(scg.StartsAt),
-		StopTime:            fb.Time(scg.EndsAt),
-		DailyBudget:         dailyBudget,
-		LifeTimeBudget:      lifetimeBudget,
-		BidStrategy:         bidStrategyType,
-		SpecialAdCategories: []string{"NONE"},
+	// Populate struct values
 }
 id, _ := fbService.Campaigns.Create(ctx, c)
 ```
@@ -80,7 +77,7 @@ im, _ := fbService.Images.Upload(context.Background(), accountID,imageName, file
 fmt.Println("Uploaded image has id: ", im.ID)
 ```
 
-```
+```go
 accountID := "[account id]"
 videoPath := "[path to video]"
 videoName := "[video name]"
