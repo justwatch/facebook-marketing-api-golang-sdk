@@ -1,4 +1,4 @@
-module jus.tw.cx/facebook-client
+module github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client
 
 go 1.12
 
