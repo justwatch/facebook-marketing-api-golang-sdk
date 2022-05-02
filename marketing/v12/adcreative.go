@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"golang.org/x/sync/errgroup"
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
