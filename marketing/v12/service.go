@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/go-kit/kit/log"
-	"jus.tw.cx/facebook-client/fb"
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client/fb"
 )
 
 // Version of the graph API being used

@@ -3,7 +3,7 @@ package v12
 import (
 	"context"
 
-	"jus.tw.cx/facebook-client/fb"
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client/fb"
 )
 
 // EventService contains all methods for working on events

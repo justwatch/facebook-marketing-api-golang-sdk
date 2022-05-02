@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"golang.org/x/sync/errgroup"
-	"jus.tw.cx/facebook-client/fb"
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client/fb"
 )
 
 // AdService works with Ads

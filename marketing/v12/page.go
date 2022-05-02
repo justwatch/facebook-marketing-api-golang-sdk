@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"jus.tw.cx/facebook-client/fb"
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client/fb"
 )
 
 // PageService contains all methods for working on pages
