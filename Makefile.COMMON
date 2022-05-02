@@ -1,0 +1,171 @@
+# THE AUTHORITATIVE VERSION OF THIS MAKEFILE LIVES IN:
+#
+#   https://gitlab.justwatch.com/go/jw-go-template
+#
+# PLEASE MAKE ANY CHANGES THERE AND PROPAGATE THEM TO ALL JUSTWATCH
+# REPOSITORIES THAT ARE USING THIS MAKEFILE.
+#
+# This file provides common Makefile infrastructure for several JustWatch
+# repositories. This file is intended
+# to be included from a project's Makefile, which needs to define the following
+# variables, at a minimum:
+#
+# * NAME    - The name of the binary / project
+#
+# Many of the variables defined below are defined conditionally (using '?'),
+# which allows the project's main Makefile to override any of these settings, if
+# needed. See also:
+#
+# https://www.gnu.org/software/make/manual/html_node/Flavors.html#Flavors.
+#
+# The including Makefile may define any number of extra targets that are
+# specific to that project.
+#
+# Many inspiration has been taken from:
+# * https://github.com/prometheus/alertmanager/blob/master/Makefile
+# * https://github.com/prometheus/node_exporter/blob/master/Makefile.COMMON
+#
+NAME               ?= $(error NAME not set in including Makefile)
+VERSION            ?= git
+PACKAGE            := jus.tw.cx/${NAME}/vendor/jus.tw.cx/jw-go-libs/http/handler/version
+CGO_ENABLED        ?= 0
+EXTLDFLAGS         ?= -extldflags '-static'
+TAG                := $(shell git rev-parse --short=8 HEAD)
+GCR_HOST           := eu.gcr.io
+GCR_PROJECT        := justwatch-compute
+CHECK_IGNORE       ?=
+EXTRA_FILES        ?=
+BASE_IMAGE         ?= ${GCR_HOST}/${GCR_PROJECT}/alpine:latest
+FLYWAY_BASE_IMAGE  ?= flyway/flyway:6.0.8-alpine
+BINARY             := ${NAME}
+BUILD_TIME         := `date +%FT%T%z`
+LDFLAGS            := -ldflags "${EXTLDFLAGS} -s -w -X ${PACKAGE}.Version=${VERSION} -X ${PACKAGE}.BuildTime=${BUILD_TIME} -X ${PACKAGE}.Commit=${TAG} -X ${PACKAGE}.Branch=${CI_COMMIT_REF_NAME} -X ${PACKAGE}.Name=${NAME}"
+DIR                := `pwd`
+TMPDIR             := /tmp/gopath
+TMPPKG             := ${TMPDIR}/src/jus.tw.cx/${NAME}
+SOURCEDIR          := .
+SOURCES            := $(shell find $(SOURCEDIR) -name '*.go')
+GO                 := GOPATH=${TMPDIR} CGO_ENABLED=${CGO_ENABLED} go
+PROTOFILES         = $(shell find . -name vendor -prune -o -type f -name '*.proto' -print)
+GOFILES_NOVENDOR   = $(shell find . -name vendor -prune -o -type f -name '*.go' -not -name '*.pb.go' -print)
+OK                 := $(shell tput setaf 6; echo ' [OK]'; tput sgr0;)
+filelist           = $(patsubst %,-f ${TMPPKG}/%,$1)
+
+.DEFAULT_GOAL: help
+
+.PHONY: help
+help:
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+$(TMPPKG): ## Create temporary gopath
+	@date +%FT%T.%N
+	mkdir -p ${TMPPKG}
+	rsync -a --exclude='.git/' ${DIR}/ ${TMPPKG}
+	@date +%FT%T.%N
+
+$(BINARY): $(TMPPKG) ## Build the binary
+	@date +%FT%T.%N
+	cd ${TMPPKG} && ${GO} build -tags netgo -o ${BINARY} ${LDFLAGS}
+	@date +%FT%T.%N
+
+.PHONY: clean
+clean: ## Remove generated files
+	@date +%FT%T.%N
+	if [ -f ${BINARY} ] ; then rm -f ${BINARY} ; fi
+	if [ -d ${TMPPKG} ] ; then rm -rf ${TMPPKG} ; fi
+	@date +%FT%T.%N
+
+.PHONY: test-base
+test-base: $(TMPPKG) ## Run tests without the race detector
+	@date +%FT%T.%N
+	cd ${TMPPKG} && ${GO} test ${LDFLAGS} ./...
+	@date +%FT%T.%N
+
+.PHONY: checks
+checks: $(TMPPKG) test-go-vet test-golint test-dragovet test-vendorcheck test-staticcheck test-unused test-gosimple test-go-fmt test-clang-format
+
+.PHONY: test-go-vet
+test-go-vet: $(TMPPKG)
+	@echo "go-vet"
+	@cd ${TMPPKG} && ${GO} vet ./...
+
+.PHONY: test-golint
+test-golint: $(TMPPKG)
+	@echo "golint"
+	@cd ${TMPPKG} && GOPATH=${TMPDIR} go list ./... | GOPATH=${TMPDIR} xargs -L1 fgt golint
+
+.PHONY: test-dragovet
+test-dragovet: $(TMPPKG)
+	@echo "dragovet"
+	@cd ${TMPPKG} && GOPATH=${TMPDIR} dragovet ./...
+
+.PHONY: test-vendorcheck
+test-vendorcheck: $(TMPPKG)
+	@echo "vendorcheck"
+	@cd ${TMPPKG} && GOPATH=${TMPDIR} vendorcheck ./...
+
+.PHONY: test-staticcheck
+test-staticcheck: $(TMPPKG)
+	@echo "staticcheck"
+	@cd ${TMPPKG} && GOPATH=${TMPDIR} staticcheck ./...
+
+.PHONY: test-unused
+test-unused: $(TMPPKG)
+	@echo "unused"
+	@cd ${TMPPKG} && GOPATH=${TMPDIR} unused ./...
+
+.PHONY: test-gosimple
+test-gosimple: $(TMPPKG)
+	@echo "gosimple"
+	@cd ${TMPPKG} && GOPATH=${TMPDIR} gosimple ./...
+
+.PHONY: test-go-fmt
+test-go-fmt: $(TMPPKG)
+	@echo "go-fmt"
+	@$(foreach gofile, $(GOFILES_NOVENDOR),\
+			out=$$(gofmt -s -l -d -e $(gofile) | tee /dev/stderr); if [ -n "$$out" ]; then exit 1; fi;)
+
+.PHONY: test-clang-format
+test-clang-format: $(TMPPKG)
+	@$(foreach pbfile, $(PROTOFILES),\
+			lines=$$(clang-format -output-replacements-xml $(pbfile) | wc -l); if [ "$$lines" -gt 3 ]; then exit 1; fi;)
+
+.PHONY: docker-push
+docker-push: $(BINARY) ## Build docker image and push to docker registry
+	@date +%FT%T.%N
+	docker-builder --target ${GCR_HOST}/${GCR_PROJECT}/${NAME}:${TAG} --baseimage ${BASE_IMAGE} --files ${TMPPKG}/${BINARY} $(call filelist,$(EXTRA_FILES)) --cmd /${BINARY}
+	@date +%FT%T.%N
+
+.PHONY: docker-push-flyway
+docker-push-flyway: $(BINARY)
+	@date +%FT%T.%N
+	docker-builder --target ${GCR_HOST}/${GCR_PROJECT}/${NAME}-flyway:${TAG} --baseimage ${FLYWAY_BASE_IMAGE} --files ${TMPPKG}/schema/ -e "FLYWAY_LOCATIONS=filesystem:/schema/sql" --cmd "migrate"
+	@date +%FT%T.%N
+
+.PHONY: run
+run: ## Compile and run locally
+	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
+	go build -i -v
+	./$(BINARY)
+
+.PHONY: proto
+proto: ## Compile GRPC Protobuf
+	@protoc -I. \
+		-I${GOPATH}/src \
+		-I${GOPATH}/src/github.com/gogo/protobuf/protobuf/ \
+		--gogo_out=plugins=grpc:. \
+		--descriptor_set_out=rpc/proto/rpc.protoset \
+		--include_imports \
+		rpc/proto/rpc.proto
+
+.PHONY: fmt
+fmt: ## Format sources
+	@gofmt -s -l -w $(GOFILES_NOVENDOR)
+	@if [ -z $(PROTOFILES) ]; then exit 0; fi; clang-format -i $(PROTOFILES)
+
+%_easyjson.go: %.go
+	easyjson -all $<
+
+.PHONY: goenv
+goenv:
+	 @GOPATH=${TMPDIR} go env

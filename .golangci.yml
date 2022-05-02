@@ -1,0 +1,88 @@
+run:
+  skip-dirs:
+   - marketing/v4
+   - marketing/v5
+   - marketing/v8
+   - marketing/v9
+   - marketing/v31
+   - marketing/v32
+   - marketing/v33
+  allow-parallel-runners: false
+  
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - errname
+    - errorlint
+    - gomnd
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - unused
+    - varcheck
+    - bodyclose
+    - contextcheck
+    - nilerr
+    - nestif
+    - unparam
+    - goconst
+    - gofmt
+    
+linters-settings:
+  errcheck:
+    exclude-functions: 
+      - github.com/go-kit/kit/log.Logger.Log
+  gomnd:
+    ignored-numbers: 
+      - '0.000001'
+      - '0.00001'
+      - '0.0001'
+      - '0.001'
+      - '0.01'
+      - '0.1'
+      - '1'
+      - '2'
+      - '3'
+      - '4'
+      - '5'
+      - '6'
+      - '7'
+      - '8'
+      - '9'
+      - '10'
+      - '11'
+      - '12'
+      - '13'
+      - '14'
+      - '15'
+      - '16'
+      - '17'
+      - '18'
+      - '19'
+      - '20'
+      - '24'
+      - '25'
+      - '30'
+      - '60'
+      - '64'
+      - '100'
+      - '120'
+      - '250'
+      - '300'
+      - '500'
+      - '1000'
+      - '10000'
+      - '100000'
+  errorlint:
+    asserts: false
+  max-issues-per-linter: 50
+  max-same-issues: 50
+
