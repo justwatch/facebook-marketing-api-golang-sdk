@@ -1,3 +1,4 @@
+![jw-logo](logo.png)
 # Facebook Marketing API sdk in Golang
 
 <!-- [![Go reference](https://pkg.go.dev/https://github.com/justwatchcom/facebook-marketing-api-golang-sdk)](https://goreportcard.com/report/https://pkg.go.dev/https://github.com/justwatchcom/facebook-marketing-api-golang-sdk) -->
