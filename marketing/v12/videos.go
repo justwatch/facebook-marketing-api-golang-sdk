@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"golang.org/x/sync/errgroup"
-	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/facebook-client/fb"
+	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
 // VideoService works with advideos
