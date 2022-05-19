@@ -203,10 +203,11 @@ type FrequencyControlSpec struct {
 
 // PromotedObject contains the id of a promoted page
 type PromotedObject struct {
-	PageID          string `json:"page_id,omitempty"`
-	PixelID         string `json:"pixel_id,omitempty"`
-	PixelRule       string `json:"pixel_rule,omitempty"`
-	CustomEventType string `json:"custom_event_type,omitempty"`
+	PageID             string `json:"page_id,omitempty"`
+	PixelID            string `json:"pixel_id,omitempty"`
+	PixelRule          string `json:"pixel_rule,omitempty"`
+	CustomEventType    string `json:"custom_event_type,omitempty"`
+	CustomConversionID string `json:"custom_conversion_id,omitempty"`
 }
 
 // Targeting contains all the targeting information of an adset
