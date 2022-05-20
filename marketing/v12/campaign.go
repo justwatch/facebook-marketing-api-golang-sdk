@@ -38,11 +38,12 @@ func (cs *CampaignService) Create(ctx context.Context, a Campaign) (string, erro
 	}
 
 	res := &fb.MinimalResponse{}
-	err := cs.c.PostJSON(ctx, fb.NewRoute(Version, "/act_%s/campaigns", a.AccountID).String(), a, res)
+	url := fb.NewRoute(Version, "/act_%s/campaigns", a.AccountID).String()
+	err := cs.c.PostJSON(ctx, url, a, res)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not POST to %q: %w", url, err)
 	} else if err = res.GetError(); err != nil {
-		return "", err
+		return "", fmt.Errorf("got error response from POST to %q: %w", url, err)
 	} else if res.ID == "" {
 		return "", fmt.Errorf("creating adset failed")
 	}
