@@ -190,6 +190,7 @@ type Insight struct {
 	VideoPlayActions                 ActionTypeValue        `json:"video_play_actions"`
 	InteractiveComponentTap          []InteractiveComponent `json:"interactive_component_tap"`
 	DeviceType                       string                 `json:"impression_device"`
+	Region                           string                 `json:"region"`
 }
 
 // GetAge returns the min and max age from the insights age field
