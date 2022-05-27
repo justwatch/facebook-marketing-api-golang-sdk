@@ -30,6 +30,22 @@ func (s *SearchService) GetAdGeoLocations(ctx context.Context) ([]AdGeoLocation,
 	return res, nil
 }
 
+func (s *SearchService) GetRegions(ctx context.Context, country string) ([]AdGeoLocation, error) {
+	rb := fb.NewRoute(Version, "/search").
+		Type("adgeolocation").
+		LocationTypes("region").
+		Limit(getGeoLocationLimit)
+	if country != "" {
+		rb.Q(country)
+	}
+	res := []AdGeoLocation{}
+	err := s.c.GetList(ctx, rb.String(), &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 // AdGeoLocation contains different geolocation types to be used for adset targeting
 type AdGeoLocation struct {
 	Key            string `json:"key"`
