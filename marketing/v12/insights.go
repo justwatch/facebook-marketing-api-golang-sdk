@@ -191,6 +191,7 @@ type Insight struct {
 	InteractiveComponentTap          []InteractiveComponent `json:"interactive_component_tap"`
 	DeviceType                       string                 `json:"impression_device"`
 	Region                           string                 `json:"region"`
+	Country                          string                 `json:"country"`
 }
 
 // GetAge returns the min and max age from the insights age field
