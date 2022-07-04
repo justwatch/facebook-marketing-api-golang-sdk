@@ -317,7 +317,7 @@ type PositionSpec struct {
 	X        float64 `json:"x"`
 	Y        float64 `json:"y"`
 	Width    float64 `json:"width"`
-	Height   int     `json:"height"`
+	Height   float64 `json:"height"`
 	Rotation int     `json:"rotation"`
 }
 
