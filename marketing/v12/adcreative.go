@@ -318,7 +318,7 @@ type PositionSpec struct {
 	Y        float64 `json:"y"`
 	Width    float64 `json:"width"`
 	Height   float64 `json:"height"`
-	Rotation int     `json:"rotation"`
+	Rotation float64 `json:"rotation"`
 }
 
 // OptionCallToAction represents the action and call to action of an answer of a poll
