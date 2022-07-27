@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// Version of the graph API being used
-const Version = "v12.0"
+// Version of the graph API being used.
+const Version = "v14.0"
 
-// Service interacts with the Facebook Marketing API
+// Service interacts with the Facebook Marketing API.
 type Service struct {
 	*fb.Client
 	AdAccounts        *AdAccountService
@@ -31,7 +31,7 @@ type Service struct {
 	Videos            *VideoService
 }
 
-// New initializes a new Service and all the Services contained
+// New initializes a new Service and all the Services contained.
 func New(l log.Logger, accessToken, appSecret string) (*Service, error) {
 	c := fb.NewClient(l, accessToken, appSecret)
 	err := c.GetJSON(context.Background(), fb.NewRoute(Version, "/me").String(), &struct{}{})
@@ -59,7 +59,7 @@ func New(l log.Logger, accessToken, appSecret string) (*Service, error) {
 	}, nil
 }
 
-// GetMetadata returns the metadata of a graph API object
+// GetMetadata returns the metadata of a graph API object.
 func (s *Service) GetMetadata(ctx context.Context, id string) (*fb.Metadata, error) {
 	res := &fb.MetadataContainer{}
 	err := s.Client.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Metadata(true).String(), res)

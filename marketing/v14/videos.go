@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// VideoService works with advideos
+// VideoService works with advideos.
 type VideoService struct {
 	c *fb.Client
 }
 
-// Get returns a single Video
+// Get returns a single Video.
 func (vs *VideoService) Get(ctx context.Context, id string) (*Video, error) {
 	res := &Video{}
 	err := vs.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields(advideoFields...).String(), res)
@@ -23,12 +23,14 @@ func (vs *VideoService) Get(ctx context.Context, id string) (*Video, error) {
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// Upload uploads a video from r into an account
+// Upload uploads a video from r into an account.
 func (vs *VideoService) Upload(ctx context.Context, act, title string, size int64, r io.Reader) (*Video, error) {
 	url := fb.NewRoute(Version, "/act_%s/advideos", act).String()
 
@@ -70,12 +72,13 @@ func (vs *VideoService) Upload(ctx context.Context, act, title string, size int6
 	return vs.Get(ctx, res.VideoID)
 }
 
-// ReadList returns all videos from an account and writes them to a channel
+// ReadList returns all videos from an account and writes them to a channel.
 func (vs *VideoService) ReadList(ctx context.Context, act string, res chan<- Video) error {
 	jres := make(chan json.RawMessage)
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
+
 		return vs.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/advideos", act).Fields(advideoFields...).Limit(1000).String(), jres)
 	})
 	wg.Go(func() error {
@@ -87,8 +90,10 @@ func (vs *VideoService) ReadList(ctx context.Context, act string, res chan<- Vid
 			}
 			res <- v
 		}
+
 		return nil
 	})
+
 	return wg.Wait()
 }
 
@@ -116,7 +121,7 @@ type finishResponse struct {
 	Success bool `json:"success"`
 }
 
-// Video represents an ad video
+// Video represents an ad video.
 type Video struct {
 	ContentCategory        string  `json:"content_category"`
 	CreatedTime            string  `json:"created_time"`

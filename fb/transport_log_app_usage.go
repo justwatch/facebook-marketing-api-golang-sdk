@@ -45,13 +45,12 @@ func (t *logAppUsageTransport) RoundTrip(r *http.Request) (*http.Response, error
 		xAppUsage := &xAppUsage{}
 		err := json.Unmarshal([]byte(xau), xAppUsage)
 		if err != nil {
-			level.Error(t.l).Log("msg", "encountered an error when unmarshalling into *xAppUsage", "x-app-usage", xau, "err", err)
+			_ = level.Error(t.l).Log("msg", "encountered an error when unmarshalling into *xAppUsage", "x-app-usage", xau, "err", err)
 		}
 
 		if xAppUsage.CallCount > 0 || xAppUsage.TotalCputime > 0 || xAppUsage.TotalTime > 0 {
-			level.Info(t.l).Log("msg", "got x-app-usage", "call_count", xAppUsage.CallCount, "total_cputime", xAppUsage.TotalCputime, "total_time", xAppUsage.TotalTime)
+			_ = level.Info(t.l).Log("msg", "got x-app-usage", "call_count", xAppUsage.CallCount, "total_cputime", xAppUsage.TotalCputime, "total_time", xAppUsage.TotalTime)
 		}
-
 	}
 
 	return resp, err

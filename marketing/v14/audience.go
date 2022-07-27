@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -12,15 +12,15 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// BatchMaxIDsSequence we upload
+// BatchMaxIDsSequence we upload.
 const BatchMaxIDsSequence = 10000
 
-// AudienceService contains all methods for working on audiences
+// AudienceService contains all methods for working on audiences.
 type AudienceService struct {
 	c *fb.Client
 }
 
-// Create uploads a new custom audience and returns the id of the custom audience
+// Create uploads a new custom audience and returns the id of the custom audience.
 func (as *AudienceService) Create(ctx context.Context, act string, a CustomAudience) (string, error) {
 	if a.ID != "" {
 		return "", fmt.Errorf("cannot create audience that already exists: %s", a.ID)
@@ -41,7 +41,7 @@ func (as *AudienceService) Create(ctx context.Context, act string, a CustomAudie
 	return res.ID, nil
 }
 
-// Update updates an audience
+// Update updates an audience.
 func (as *AudienceService) Update(ctx context.Context, a CustomAudience) error {
 	if a.ID == "" {
 		return errors.New("cannot update audience without id")
@@ -56,6 +56,7 @@ func (as *AudienceService) Update(ctx context.Context, a CustomAudience) error {
 	} else if !res.Success && res.ID == "" {
 		return fmt.Errorf("updating failed")
 	}
+
 	return nil
 }
 
@@ -87,6 +88,7 @@ func (as *AudienceService) Share(ctx context.Context, customAudienceID string, a
 		for _, existingAdAccountID := range existingAdaccountIDs {
 			if existingAdAccountID == json.Number(adaccountIDToShare) {
 				found = true
+
 				break
 			}
 		}
@@ -130,12 +132,12 @@ func (as *AudienceService) ListAdAccounts(ctx context.Context, audienceID string
 	return res.Data, nil
 }
 
-// Delete removes a single audience
+// Delete removes a single audience.
 func (as *AudienceService) Delete(ctx context.Context, id string) error {
 	return as.c.Delete(ctx, fb.NewRoute(Version, "/%s", id).String())
 }
 
-// DeleteLookalikes removes all lookalikes of an audience
+// DeleteLookalikes removes all lookalikes of an audience.
 func (as *AudienceService) DeleteLookalikes(ctx context.Context, id string) error {
 	ca, err := as.Get(ctx, id)
 	if err != nil {
@@ -150,10 +152,11 @@ func (as *AudienceService) DeleteLookalikes(ctx context.Context, id string) erro
 			return err
 		}
 	}
+
 	return nil
 }
 
-// Get returns a single audience
+// Get returns a single audience.
 func (as *AudienceService) Get(ctx context.Context, id string) (*CustomAudience, error) {
 	res := &CustomAudience{}
 	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields("id", "name", "description", "subtype", "approximate_count_upper_bound", "approximate_count_lower_bound", "rule", "customer_file_source", "lookalike_audience_ids", "adaccounts").String(), res)
@@ -161,17 +164,19 @@ func (as *AudienceService) Get(ctx context.Context, id string) (*CustomAudience,
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// ListCustom returns all custom audiences for that account
+// ListCustom returns all custom audiences for that account.
 func (as *AudienceService) ListCustom(ctx context.Context, act string) ([]CustomAudience, error) {
 	res := []CustomAudience{}
 	route := fb.NewRoute(Version, "/act_%s/customaudiences", act).
 		Limit(250).
-		Fields("id", "name", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts", "lookalike_spec") //, "rule")
+		Fields("id", "name", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts", "lookalike_spec") // , "rule")
 	err := as.c.GetList(ctx, route.String(), &res)
 	if err != nil {
 		return nil, err
@@ -181,12 +186,12 @@ func (as *AudienceService) ListCustom(ctx context.Context, act string) ([]Custom
 }
 
 // ListCustomFiltered returns a filtered list of custom audiences for that account.
-// ...&filtering=[{field:'subtype',operator:'EQUAL',value:'WEBSITE'}]
+// ...&filtering=[{field:'subtype',operator:'EQUAL',value:'WEBSITE'}].
 func (as *AudienceService) ListCustomFiltered(ctx context.Context, act string, filtering []fb.Filter) ([]CustomAudience, error) {
 	res := []CustomAudience{}
 	route := fb.NewRoute(Version, "/act_%s/customaudiences", act).
 		Limit(250).
-		Fields("id", "name", "account_id", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts"). //, "rule")
+		Fields("id", "name", "account_id", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts"). // , "rule")
 		Filtering(filtering...)
 	err := as.c.GetList(ctx, route.String(), &res)
 	if err != nil {
@@ -196,7 +201,7 @@ func (as *AudienceService) ListCustomFiltered(ctx context.Context, act string, f
 	return res, nil
 }
 
-// EditIDs starts adding or removing ids from a custom audience
+// EditIDs starts adding or removing ids from a custom audience.
 func (as *AudienceService) EditIDs(ctx context.Context, audienceID string, c <-chan string, doRemove bool) error {
 	bigN, err := rand.Int(rand.Reader, big.NewInt(math.MaxUint32))
 	if err != nil {
@@ -246,6 +251,7 @@ func (as *AudienceService) EditIDs(ctx context.Context, audienceID string, c <-c
 			Failed:   failed,
 		}
 	}
+
 	return nil
 }
 
@@ -263,6 +269,7 @@ func readBatch(max int, c <-chan string, leftOver string) ([]string, string, boo
 		id, ok = read(c)
 		if id == "" {
 			index--
+
 			continue
 		}
 		s = append(s, id)
@@ -270,6 +277,7 @@ func readBatch(max int, c <-chan string, leftOver string) ([]string, string, boo
 	if len(s) == max {
 		leftOver, ok = read(c)
 	}
+
 	return s, leftOver, ok
 }
 
@@ -279,6 +287,7 @@ func read(c <-chan string) (string, bool) {
 	for ok && res == "" {
 		res, ok = <-c
 	}
+
 	return res, ok
 }
 
@@ -317,7 +326,7 @@ func (ue *UploadError) Error() string {
 }
 
 // CustomAudience https://developers.facebook.com/docs/marketing-api/reference/custom-audience
-// unused fields: ApproximateCount   int            `json:"approximate_count,omitempty"`
+// unused fields: ApproximateCount   int            `json:"approximate_count,omitempty"`.
 type CustomAudience struct {
 	ID                         string `json:"id,omitempty"`
 	Name                       string `json:"name,omitempty"`
@@ -335,7 +344,7 @@ type CustomAudience struct {
 	OriginAudienceID   string         `json:"origin_audience_id,omitempty"`
 }
 
-// LookalikeSpec contains the metadata of lookalike audiences
+// LookalikeSpec contains the metadata of lookalike audiences.
 type LookalikeSpec struct {
 	// Country      string             `json:"country,omitempty"`
 	Origin []LookalikeOrigion `json:"origin,omitempty"`
@@ -355,7 +364,7 @@ type GeoLocation struct {
 	CountryGroups []string `json:"country_groups,omitempty"`
 }
 
-// LookalikeOrigion tells which audience a lookalike one is related to
+// LookalikeOrigion tells which audience a lookalike one is related to.
 type LookalikeOrigion struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
