@@ -5,18 +5,18 @@ import (
 	"fmt"
 )
 
-// ErrorContainer is a convenient type for embedding in other structs
+// ErrorContainer is a convenient type for embedding in other structs.
 type ErrorContainer struct {
 	Error *Error `json:"error"`
 }
 
-// GetError returns an error if available
-func (ec *ErrorContainer) GetError() (err error) {
+// GetError returns an error if available.
+func (ec *ErrorContainer) GetError() error {
 	if ec.Error != nil {
-		err = ec.Error
+		return ec.Error
 	}
 
-	return
+	return nil
 }
 
 type listResponse struct {
@@ -29,7 +29,7 @@ type listElementsResponse struct {
 	Data []json.RawMessage `json:"data"`
 }
 
-// Error implements error
+// Error implements error.
 type Error struct {
 	Message        string          `json:"message"`
 	Type           string          `json:"type"`
@@ -42,7 +42,7 @@ type Error struct {
 	ErrorData      json.RawMessage `json:"error_data"`
 }
 
-// IsNotFound returns whether the error is a fb error with specific code and subcode
+// IsNotFound returns whether the error is a fb error with specific code and subcode.
 func IsNotFound(err error) bool {
 	e, ok := err.(*Error)
 	if !ok {
@@ -55,7 +55,7 @@ func IsNotFound(err error) bool {
 	return e.Code == 100 && e.ErrorSubcode == 33
 }
 
-// Error implements error
+// Error implements error.
 func (e *Error) Error() string {
 	if e.ErrorUserMsg != "" {
 		return e.ErrorUserMsg
@@ -64,13 +64,13 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("facebook: type='%s' message='%s' error_user_title='%s'", e.Type, e.Message, e.ErrorUserTitle)
 }
 
-// TimeRange is the standard time range used by facebook
+// TimeRange is the standard time range used by facebook.
 type TimeRange struct {
 	Since string `json:"since"`
 	Until string `json:"until"`
 }
 
-// Paging is a convenient type for embedding in other structs
+// Paging is a convenient type for embedding in other structs.
 type Paging struct {
 	Paging struct {
 		Cursors struct {
@@ -81,23 +81,23 @@ type Paging struct {
 	} `json:"paging"`
 }
 
-// KeyValue represents a Facebook k/v entry in a API JSON response
+// KeyValue represents a Facebook k/v entry in a API JSON response.
 type KeyValue struct {
 	ActionType string      `json:"action_type"`
 	Value      json.Number `json:"value"`
 }
 
-// ID contains the ID field
+// ID contains the ID field.
 type ID struct {
 	ID string `json:"id"`
 }
 
-// MetadataContainer contains a graph APIs object metadata
+// MetadataContainer contains a graph APIs object metadata.
 type MetadataContainer struct {
 	Metadata *Metadata `json:"metadata"`
 }
 
-// Metadata contains information about a graph API object
+// Metadata contains information about a graph API object.
 type Metadata struct {
 	Type        string            `json:"type"`
 	Connections map[string]string `json:"connections"`
@@ -108,7 +108,7 @@ type Metadata struct {
 	} `json:"fields"`
 }
 
-// MinimalResponse contains some information about a object being updated
+// MinimalResponse contains some information about a object being updated.
 type MinimalResponse struct {
 	ID          string `json:"id"`
 	Success     bool   `json:"success"`
@@ -116,7 +116,7 @@ type MinimalResponse struct {
 	ErrorContainer
 }
 
-// SummaryContainer contains a summary with a total count of items
+// SummaryContainer contains a summary with a total count of items.
 type SummaryContainer struct {
 	Summary struct {
 		TotalCount uint64 `json:"total_count"`

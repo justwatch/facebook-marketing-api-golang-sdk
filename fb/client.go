@@ -21,13 +21,13 @@ const (
 	errorStringMaxLen = 50
 )
 
-// Client holds an http.Client and provides additional functionality
+// Client holds an http.Client and provides additional functionality.
 type Client struct {
 	l log.Logger
 	*http.Client
 }
 
-// NewClient returns a http.Client containing a special transport with injects the version, token, and clientkey
+// NewClient returns a http.Client containing a special transport with injects the version, token, and clientkey.
 func NewClient(l log.Logger, token, clientKey string) *Client {
 	if l == nil {
 		l = log.NewNopLogger()
@@ -49,9 +49,11 @@ func (c *Client) handleResponse(resp *http.Response, res interface{}, req []byte
 		return err
 	} else if err = ec.GetError(); err != nil {
 		c.handleError(err, resp, req)
+
 		return err
 	} else if resp.StatusCode != http.StatusOK {
 		c.handleError(nil, resp, req)
+
 		return fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
@@ -60,17 +62,19 @@ func (c *Client) handleResponse(resp *http.Response, res interface{}, req []byte
 
 func (c *Client) handleError(err error, res *http.Response, req []byte) {
 	if err == nil {
-		level.Warn(c.l).Log("msg", "received unexpected status code", "url", res.Request.URL.String(), "status", res.StatusCode, "method", res.Request.Method, "body", truncateString(string(req), errorStringMaxLen))
+		_ = level.Warn(c.l).Log("msg", "received unexpected status code", "url", res.Request.URL.String(), "status", res.StatusCode, "method", res.Request.Method, "body", truncateString(string(req), errorStringMaxLen))
+
 		return
 	}
 
 	e, ok := err.(*Error)
 	if !ok {
-		level.Warn(c.l).Log("msg", "received unexpected error", "url", res.Request.URL.String(), "status", res.StatusCode, "err", err, "type", fmt.Sprintf("%T", err), "method", res.Request.Method, "body", truncateString(string(req), errorStringMaxLen))
+		_ = level.Warn(c.l).Log("msg", "received unexpected error", "url", res.Request.URL.String(), "status", res.StatusCode, "err", err, "type", fmt.Sprintf("%T", err), "method", res.Request.Method, "body", truncateString(string(req), errorStringMaxLen))
+
 		return
 	}
 
-	level.Warn(c.l).Log("msg", "received facebook error", "url", res.Request.URL.String(), "status", res.StatusCode,
+	_ = level.Warn(c.l).Log("msg", "received facebook error", "url", res.Request.URL.String(), "status", res.StatusCode,
 		"message", e.Message,
 		"type", e.Type,
 		"code", e.Code,
@@ -96,10 +100,11 @@ func (c *Client) GetJSON(ctx context.Context, url string, res interface{}) error
 	if err != nil {
 		return err
 	}
+
 	return c.handleResponse(resp, res, nil)
 }
 
-// GetList uses reflection to append to res when the result is a list
+// GetList uses reflection to append to res when the result is a list.
 func (c *Client) GetList(ctx context.Context, url string, res interface{}) error {
 	stats := StatFromContext(ctx)
 	for url != "" {
@@ -124,7 +129,7 @@ func (c *Client) GetList(ctx context.Context, url string, res interface{}) error
 	return nil
 }
 
-// ReadList writes json.RawMessage to a chan when the response is a list
+// ReadList writes json.RawMessage to a chan when the response is a list.
 func (c *Client) ReadList(ctx context.Context, url string, res chan<- json.RawMessage) error {
 	stats := StatFromContext(ctx)
 	for url != "" {
@@ -181,10 +186,11 @@ func (c *Client) PostJSON(ctx context.Context, url string, req, res interface{})
 	if debugBuf != nil {
 		b = debugBuf.Bytes()
 	}
+
 	return c.handleResponse(resp, res, b)
 }
 
-// DeleteJSON sends a DELETE request to url with a body and marshals the response to res
+// DeleteJSON sends a DELETE request to url with a body and marshals the response to res.
 func (c *Client) DeleteJSON(ctx context.Context, url string, req, res interface{}) error {
 	var r io.Reader
 	if req != nil {
@@ -217,10 +223,11 @@ func (c *Client) DeleteJSON(ctx context.Context, url string, req, res interface{
 	if debugBuf != nil {
 		b = debugBuf.Bytes()
 	}
+
 	return c.handleResponse(resp, res, b)
 }
 
-// PostValues sends an POST request to the Facebook Graph API
+// PostValues sends an POST request to the Facebook Graph API.
 func (c *Client) PostValues(ctx context.Context, u string, vals url.Values) error {
 	if len(vals) == 0 {
 		return nil
@@ -247,7 +254,7 @@ func (c *Client) PostValues(ctx context.Context, u string, vals url.Values) erro
 	return res.GetError()
 }
 
-// Delete sends a DELETE request to the given URL
+// Delete sends a DELETE request to the given URL.
 func (c *Client) Delete(ctx context.Context, url string) error {
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -305,6 +312,7 @@ func (c *Client) UploadFile(ctx context.Context, url, name string, r io.Reader, 
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = 6 * time.Second
 	bo.MaxElapsedTime = 5 * time.Minute
+
 	return backoff.Retry(func() error {
 		request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
 		if err != nil {

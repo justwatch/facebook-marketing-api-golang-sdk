@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// RouteBuilder helps building facebook API request routes
+// RouteBuilder helps building facebook API request routes.
 type RouteBuilder struct {
 	err     error
 	version string
@@ -17,7 +17,7 @@ type RouteBuilder struct {
 	v       url.Values
 }
 
-// NewRoute starts building a new route
+// NewRoute starts building a new route.
 func NewRoute(version, format string, a ...interface{}) *RouteBuilder {
 	return &RouteBuilder{
 		version: version,
@@ -26,107 +26,117 @@ func NewRoute(version, format string, a ...interface{}) *RouteBuilder {
 	}
 }
 
-// Fields sets the fields query param
+// Fields sets the fields query param.
 func (rb *RouteBuilder) Fields(f ...string) *RouteBuilder {
 	if len(f) > 0 {
 		rb.v.Set("fields", strings.Join(f, ","))
 	} else {
 		rb.v.Del("fields")
 	}
+
 	return rb
 }
 
-// Limit sets the limit param
+// Limit sets the limit param.
 func (rb *RouteBuilder) Limit(limit int) *RouteBuilder {
 	if limit > -1 {
 		rb.v.Set("limit", strconv.Itoa(limit))
 	} else {
 		rb.v.Del("limit")
 	}
+
 	return rb
 }
 
-// Type sets the type param
+// Type sets the type param.
 func (rb *RouteBuilder) Type(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("type", s)
 	} else {
 		rb.v.Del("type")
 	}
+
 	return rb
 }
 
-// Class sets the type param
+// Class sets the type param.
 func (rb *RouteBuilder) Class(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("class", s)
 	} else {
 		rb.v.Del("class")
 	}
+
 	return rb
 }
 
-// LocationTypes sets the location_types array param
+// LocationTypes sets the location_types array param.
 func (rb *RouteBuilder) LocationTypes(s ...string) *RouteBuilder {
 	if len(s) > 0 {
 		rb.v.Set("location_types", fmt.Sprintf("['%s']", strings.Join(s, "','")))
 	} else {
 		rb.v.Del("location_types")
 	}
+
 	return rb
 }
 
-// ActionBreakdowns sets the action_breakdowns param
+// ActionBreakdowns sets the action_breakdowns param.
 func (rb *RouteBuilder) ActionBreakdowns(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("action_breakdowns", s)
 	} else {
 		rb.v.Del("action_breakdowns")
 	}
+
 	return rb
 }
 
-// Breakdowns sets the breakdowns array param
+// Breakdowns sets the breakdowns array param.
 func (rb *RouteBuilder) Breakdowns(s ...string) *RouteBuilder {
 	if len(s) > 0 {
 		rb.v.Set("breakdowns", strings.Join(s, ","))
 	} else {
 		rb.v.Del("breakdowns")
 	}
+
 	return rb
 }
 
-// Level sets the location_types level param
+// Level sets the location_types level param.
 func (rb *RouteBuilder) Level(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("level", s)
 	} else {
 		rb.v.Del("level")
 	}
+
 	return rb
 }
 
-// DailyTimeIncrement sets whether time_increment should be 1
+// DailyTimeIncrement sets whether time_increment should be 1.
 func (rb *RouteBuilder) DailyTimeIncrement(b bool) *RouteBuilder {
 	if b {
 		rb.v.Set("time_increment", "1")
 	} else {
 		rb.v.Del("time_increment")
 	}
+
 	return rb
 }
 
-// ExportFormat sets the export_format level param
+// ExportFormat sets the export_format level param.
 func (rb *RouteBuilder) ExportFormat(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("export_format", s)
 	} else {
 		rb.v.Del("export_format")
 	}
+
 	return rb
 }
 
-// TimeRange sets time_range param and deletes the date_preset one
+// TimeRange sets time_range param and deletes the date_preset one.
 func (rb *RouteBuilder) TimeRange(minDate, maxDate time.Time) *RouteBuilder {
 	if minDate.IsZero() {
 		rb.v.Del("time_range")
@@ -141,10 +151,11 @@ func (rb *RouteBuilder) TimeRange(minDate, maxDate time.Time) *RouteBuilder {
 		})
 		rb.v.Set("time_range", string(b))
 	}
+
 	return rb
 }
 
-// DatePreset sets date_preset param and deletes the time_range one
+// DatePreset sets date_preset param and deletes the time_range one.
 func (rb *RouteBuilder) DatePreset(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Del("time_range")
@@ -155,20 +166,22 @@ func (rb *RouteBuilder) DatePreset(s string) *RouteBuilder {
 	} else {
 		rb.v.Del("date_preset")
 	}
+
 	return rb
 }
 
-// DefaultSummary sets default_summary param or deletes it
+// DefaultSummary sets default_summary param or deletes it.
 func (rb *RouteBuilder) DefaultSummary(t bool) *RouteBuilder {
 	if t {
 		rb.v.Set("default_summary", "true")
 	} else {
 		rb.v.Del("default_summary")
 	}
+
 	return rb
 }
 
-// Filtering sets filtering param or deletes it
+// Filtering sets filtering param or deletes it.
 func (rb *RouteBuilder) Filtering(f ...Filter) *RouteBuilder {
 	if len(f) > 0 {
 		b, err := json.Marshal(f)
@@ -184,7 +197,7 @@ func (rb *RouteBuilder) Filtering(f ...Filter) *RouteBuilder {
 	return rb
 }
 
-// EffectiveStatus sets the effective_status param or deletes it
+// EffectiveStatus sets the effective_status param or deletes it.
 func (rb *RouteBuilder) EffectiveStatus(s ...string) *RouteBuilder {
 	if len(s) > 0 {
 		rb.v.Set("effective_status", `["`+strings.Join(s, `","`)+`"]`)
@@ -195,7 +208,7 @@ func (rb *RouteBuilder) EffectiveStatus(s ...string) *RouteBuilder {
 	return rb
 }
 
-// AdFormat sets the ad_format param or deletes it
+// AdFormat sets the ad_format param or deletes it.
 func (rb *RouteBuilder) AdFormat(s string) *RouteBuilder {
 	if len(s) > 0 {
 		rb.v.Set("ad_format", s)
@@ -206,7 +219,7 @@ func (rb *RouteBuilder) AdFormat(s string) *RouteBuilder {
 	return rb
 }
 
-// Metadata sets the ad_format param or deletes it
+// Metadata sets the ad_format param or deletes it.
 func (rb *RouteBuilder) Metadata(t bool) *RouteBuilder {
 	if t {
 		rb.v.Set("metadata", "1")
@@ -217,7 +230,7 @@ func (rb *RouteBuilder) Metadata(t bool) *RouteBuilder {
 	return rb
 }
 
-// Order sets the order param or deletes it
+// Order sets the order param or deletes it.
 func (rb *RouteBuilder) Order(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("order", s)
@@ -228,7 +241,7 @@ func (rb *RouteBuilder) Order(s string) *RouteBuilder {
 	return rb
 }
 
-// Filter sets the filter param or deletes it
+// Filter sets the filter param or deletes it.
 func (rb *RouteBuilder) Filter(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("filter", s)
@@ -239,7 +252,7 @@ func (rb *RouteBuilder) Filter(s string) *RouteBuilder {
 	return rb
 }
 
-// Summary sets the summary param or deletes it
+// Summary sets the summary param or deletes it.
 func (rb *RouteBuilder) Summary(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("summary", s)
@@ -250,7 +263,7 @@ func (rb *RouteBuilder) Summary(s string) *RouteBuilder {
 	return rb
 }
 
-// Q sets the q param or deletes it
+// Q sets the q param or deletes it.
 func (rb *RouteBuilder) Q(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("q", s)
@@ -261,7 +274,7 @@ func (rb *RouteBuilder) Q(s string) *RouteBuilder {
 	return rb
 }
 
-// Aggregation sets the aggregation param or deletes it
+// Aggregation sets the aggregation param or deletes it.
 func (rb *RouteBuilder) Aggregation(s string) *RouteBuilder {
 	if s != "" {
 		rb.v.Set("aggregation", s)
@@ -272,24 +285,26 @@ func (rb *RouteBuilder) Aggregation(s string) *RouteBuilder {
 	return rb
 }
 
-// ActionAttributionWindows sets the action_attribution_windows param or deletes it
+// ActionAttributionWindows sets the action_attribution_windows param or deletes it.
 func (rb *RouteBuilder) ActionAttributionWindows(s ...string) *RouteBuilder {
 	if len(s) > 0 {
 		rb.v.Set("action_attribution_windows", strings.Join(s, ","))
 	} else {
 		rb.v.Del("action_attribution_windows")
 	}
+
 	return rb
 }
 
-// TargetingSpec sets the action_attribution_windows param or deletes it
+// TargetingSpec sets the action_attribution_windows param or deletes it.
 func (rb *RouteBuilder) TargetingSpec(ts interface{}) *RouteBuilder {
 	b, _ := json.Marshal(ts)
 	rb.v.Set("targeting_spec", string(b))
+
 	return rb
 }
 
-// TargetingOptionList sets the targeting_option_list param or deletes it
+// TargetingOptionList sets the targeting_option_list param or deletes it.
 func (rb *RouteBuilder) TargetingOptionList(s ...string) *RouteBuilder {
 	if len(s) > 0 {
 		rb.v.Set("targeting_option_list", `["`+strings.Join(s, `","`)+`"]`)
@@ -300,7 +315,7 @@ func (rb *RouteBuilder) TargetingOptionList(s ...string) *RouteBuilder {
 	return rb
 }
 
-// String implements fmt.Stringer and returns the finished url
+// String implements fmt.Stringer and returns the finished url.
 func (rb *RouteBuilder) String() string {
 	if rb.err != nil {
 		return "err: " + rb.err.Error()
@@ -314,7 +329,7 @@ func (rb *RouteBuilder) String() string {
 	}).String()
 }
 
-// Filter is used for filtering lists
+// Filter is used for filtering lists.
 type Filter struct {
 	Field    string      `json:"field"`
 	Operator string      `json:"operator"`

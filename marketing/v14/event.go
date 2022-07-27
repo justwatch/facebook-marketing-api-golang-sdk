@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// EventService contains all methods for working on events
+// EventService contains all methods for working on events.
 type EventService struct {
 	c *fb.Client
 }
