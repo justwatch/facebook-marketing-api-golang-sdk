@@ -43,11 +43,12 @@ func (t *tokenTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return t.next.RoundTrip(&rNew)
 }
 
-// SetPageAccessToken adds token to the context to be used for making requests
+// SetPageAccessToken adds token to the context to be used for making requests.
 func SetPageAccessToken(ctx context.Context, token string) context.Context {
 	if token == "" {
 		return ctx
 	}
+
 	return context.WithValue(ctx, tk, token)
 }
 
@@ -67,5 +68,6 @@ var tk tokenKey
 func (t *tokenTransport) getAppSecretProof(ctx context.Context) string {
 	h := hmac.New(sha256.New, []byte(t.clientKey))
 	h.Write([]byte(t.getAccessToken(ctx)))
+
 	return fmt.Sprintf("%x", h.Sum(nil))
 }

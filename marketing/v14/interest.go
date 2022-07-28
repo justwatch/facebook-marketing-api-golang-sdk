@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -7,12 +7,12 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// InterestService works with ads interests
+// InterestService works with ads interests.
 type InterestService struct {
 	c *fb.Client
 }
 
-// Search returns a list of InterestTargetings
+// Search returns a list of InterestTargetings.
 func (is *InterestService) Search(ctx context.Context, query string, limit int) ([]InterestTargeting, error) {
 	query = strings.TrimSpace(query)
 	if query == "" {
@@ -28,7 +28,7 @@ func (is *InterestService) Search(ctx context.Context, query string, limit int) 
 	return res, nil
 }
 
-// TargetingSearch searches for a targeting
+// TargetingSearch searches for a targeting.
 func (is *InterestService) TargetingSearch(ctx context.Context, act string, query string) ([]InterestTargeting, error) {
 	query = strings.TrimSpace(query)
 	if query == "" {
@@ -44,7 +44,7 @@ func (is *InterestService) TargetingSearch(ctx context.Context, act string, quer
 	return res, nil
 }
 
-// InterestTargeting represents an ad interest to be used in an adset targeting
+// InterestTargeting represents an ad interest to be used in an adset targeting.
 type InterestTargeting struct {
 	ID           string   `json:"id"`
 	Name         string   `json:"name"`

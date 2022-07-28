@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -17,13 +17,13 @@ const (
 	adCreativeReadListLimit = 50
 )
 
-// AdCreativeService works on adcreatives
+// AdCreativeService works on adcreatives.
 type AdCreativeService struct {
 	c *fb.Client
 	*fb.StatsContainer
 }
 
-// Get return a single creative
+// Get return a single creative.
 func (as *AdCreativeService) Get(ctx context.Context, id string) (*AdCreative, error) {
 	res := &AdCreative{}
 	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields(Adcreativefields...).String(), res)
@@ -31,12 +31,14 @@ func (as *AdCreativeService) Get(ctx context.Context, id string) (*AdCreative, e
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// Create uploads a new adcreative and returns the ID
+// Create uploads a new adcreative and returns the ID.
 func (as *AdCreativeService) Create(ctx context.Context, a AdCreative) (string, string, error) {
 	if a.ID != "" {
 		return "", "", fmt.Errorf("cannot create adcreative that already exists: %s", a.ID)
@@ -61,7 +63,7 @@ func (as *AdCreativeService) Create(ctx context.Context, a AdCreative) (string, 
 	return res.ID.ID, res.EffectiveObjectStoryID, nil
 }
 
-// GetPreviewURL returns the preview URL of a creative
+// GetPreviewURL returns the preview URL of a creative.
 func (as *AdCreativeService) GetPreviewURL(ctx context.Context, id, format string) (string, error) {
 	b := []struct {
 		Body string `json:"body"`
@@ -82,10 +84,11 @@ func (as *AdCreativeService) GetPreviewURL(ctx context.Context, id, format strin
 	if !ok {
 		return "", errors.New("did not find iframge")
 	}
+
 	return link, nil
 }
 
-// ReadList writes all adcreatives from an account to res
+// ReadList writes all adcreatives from an account to res.
 func (as *AdCreativeService) ReadList(ctx context.Context, act string, res chan<- AdCreative) error {
 	stat := as.StatsContainer.AddStats(act)
 	if stat != nil {
@@ -103,6 +106,7 @@ func (as *AdCreativeService) ReadList(ctx context.Context, act string, res chan<
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
+
 		return as.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/ads", act).
 			Fields("adcreatives{id,account_id,call_to_action_type,effective_instagram_story_id,effective_object_story_id,image_hash,image_url,instagram_actor_id,instagram_permalink_url,instagram_story_id,link_og_id,link_url,name,object_id,object_story_id,object_story_spec,object_type,object_url,status,thumbnail_url,title,video_id}").
 			Limit(adCreativeReadListLimit).
@@ -124,20 +128,18 @@ func (as *AdCreativeService) ReadList(ctx context.Context, act string, res chan<
 				res <- v.Adcreatives.Data[i]
 			}
 		}
+
 		return nil
 	})
+
 	return wg.Wait()
 }
 
-// Adcreativefields are the fields of an adcreative
+// Adcreativefields are the fields of an adcreative.
 var Adcreativefields = []string{
 	"id",
 	"account_id",
-	// "actor_id",
-	// "adlabels",
-	// "applink_treatment",
 	"body", // The body of the ad. Not supported for video post creatives.
-	// "branded_content_sponsor_page_id",
 	"call_to_action_type",
 	"effective_instagram_story_id",
 	"effective_object_story_id",
@@ -148,23 +150,15 @@ var Adcreativefields = []string{
 	"instagram_story_id",
 	"link_og_id",
 	"link_url",
-	// "messenger_sponsored_message",
 	"name",
 	"object_id",
 	"object_story_id",
 	"object_story_spec",
 	"object_type",
 	"object_url",
-	// "platform_customizations", // I hope this will never get used, will make the data model more complicated
-	// "product_set_id",
-	// "recommender_settings",
 	"status",
-	// "template_url",
-	// "template_url_spec",
 	"thumbnail_url",
 	"title",
-	// "url_tags",
-	// "use_page_actor_override",
 	"video_id",
 }
 
@@ -181,7 +175,7 @@ type AdCreative struct {
 	Body string `json:"body,omitempty"`
 	// Branded Content sponsor ID, creating ads using existing BC posts
 	BrandedContentSponsorPageID string `json:"branded_content_sponsor_page_id,omitempty"`
-	//The call to action button text and header text of legacy ads.
+
 	CallToActionType string `json:"call_to_action_type,omitempty"`
 	// The ID of an Instagram post to use in an ad.
 	EffectiveInstagramStoryID string `json:"effective_instagram_story_id,omitempty"`
@@ -265,7 +259,7 @@ type adCreativeContainer struct {
 	} `json:"adcreatives"`
 }
 
-// GetLandingPageURL returns the landing page URL of the creative
+// GetLandingPageURL returns the landing page URL of the creative.
 func (ac AdCreative) GetLandingPageURL() string {
 	if ac.ObjectStorySpec == nil {
 		return ""
@@ -280,7 +274,7 @@ func (ac AdCreative) GetLandingPageURL() string {
 	return ""
 }
 
-// ObjectStorySpec contains the media of a creative
+// ObjectStorySpec contains the media of a creative.
 type ObjectStorySpec struct {
 	PageID           string               `json:"page_id,omitempty"`
 	InstagramActorID string               `json:"instagram_actor_id,omitempty"`
@@ -289,19 +283,19 @@ type ObjectStorySpec struct {
 	PhotoData        *AdCreativePhotoData `json:"photo_data,omitempty"`
 }
 
-// InteractiveComponentsSpec is mainly used for Video Poll Ads
+// InteractiveComponentsSpec is mainly used for Video Poll Ads.
 type InteractiveComponentsSpec struct {
 	Components []*Component `json:"components"`
 }
 
-// Component of the Interactive component struct
+// Component of the Interactive component struct.
 type Component struct {
 	Type         string        `json:"type"`
 	PositionSpec *PositionSpec `json:"position_spec"`
 	PollSpec     *PollSpec     `json:"poll_spec"`
 }
 
-// PollSpec represents the questions and answers of a poll
+// PollSpec represents the questions and answers of a poll.
 type PollSpec struct {
 	QuestionText        string              `json:"question_text"`
 	OptionAText         string              `json:"option_a_text"`
@@ -312,7 +306,7 @@ type PollSpec struct {
 	LinkDisplay         string              `json:"link_display,omitempty"`
 }
 
-// PositionSpec describes the position of an interactive component
+// PositionSpec describes the position of an interactive component.
 type PositionSpec struct {
 	X        float64 `json:"x"`
 	Y        float64 `json:"y"`
@@ -321,19 +315,19 @@ type PositionSpec struct {
 	Rotation float64 `json:"rotation"`
 }
 
-// OptionCallToAction represents the action and call to action of an answer of a poll
+// OptionCallToAction represents the action and call to action of an answer of a poll.
 type OptionCallToAction struct {
 	Value *OptionCallToActionValue `json:"value"`
 	Type  string                   `json:"type"`
 }
 
-// OptionCallToActionValue describes the link of a call to action answer
+// OptionCallToActionValue describes the link of a call to action answer.
 type OptionCallToActionValue struct {
 	Link       string `json:"link"`
 	LinkFormat string `json:"link_format,omitempty"`
 }
 
-// AdCreativePhotoData is the specific part of a creative that only photo posts do have
+// AdCreativePhotoData is the specific part of a creative that only photo posts do have.
 type AdCreativePhotoData struct {
 	BrandedContentSharedToSponsorStatus string `json:"branded_content_shared_to_sponsor_status"`
 	BrandedContentSponsorPageID         string `json:"branded_content_sponsor_page_id"`
@@ -344,7 +338,7 @@ type AdCreativePhotoData struct {
 	URL                                 string `json:"url"`
 }
 
-// VideoData is the specific part of a creative that only video posts do have
+// VideoData is the specific part of a creative that only video posts do have.
 type VideoData struct {
 	ImageHash       string                          `json:"image_hash,omitempty"`
 	ImageURL        string                          `json:"image_url,omitempty"`

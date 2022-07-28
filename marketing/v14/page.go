@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -7,12 +7,12 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// PageService contains all methods for working on pages
+// PageService contains all methods for working on pages.
 type PageService struct {
 	c *fb.Client
 }
 
-// SetPageAccessToken tries to retrieve the access token for a facebook page and includes it in the passed context so the fb.Client can use it for making requests
+// SetPageAccessToken tries to retrieve the access token for a facebook page and includes it in the passed context so the fb.Client can use it for making requests.
 func (ps *PageService) SetPageAccessToken(ctx context.Context, pageID string) (context.Context, error) {
 	tc := struct {
 		AccessToken string `json:"access_token"`
@@ -27,7 +27,7 @@ func (ps *PageService) SetPageAccessToken(ctx context.Context, pageID string) (c
 	return fb.SetPageAccessToken(ctx, tc.AccessToken), nil
 }
 
-// GetPageBackedInstagramAccounts returns the instagram actor associated with a facebook page
+// GetPageBackedInstagramAccounts returns the instagram actor associated with a facebook page.
 func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageID string) (*InstagramActor, error) {
 	ctx, err := ps.SetPageAccessToken(ctx, pageID)
 	if err != nil {
@@ -59,7 +59,7 @@ func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageI
 	return &res, nil
 }
 
-// GetClientPages returns all client pages
+// GetClientPages returns all client pages.
 func (ps *PageService) GetClientPages(ctx context.Context, businessID string) ([]Page, error) {
 	res := []Page{}
 	route := fb.NewRoute(Version, "/%s/client_pages", businessID).Limit(1000).Fields(pageFields...)
@@ -71,7 +71,7 @@ func (ps *PageService) GetClientPages(ctx context.Context, businessID string) ([
 	return res, nil
 }
 
-// GetOwnedPages returns all owned pages
+// GetOwnedPages returns all owned pages.
 func (ps *PageService) GetOwnedPages(ctx context.Context, businessID string) ([]Page, error) {
 	res := []Page{}
 	route := fb.NewRoute(Version, "/%s/owned_pages", businessID).Limit(1000).Fields(pageFields...)
@@ -83,7 +83,7 @@ func (ps *PageService) GetOwnedPages(ctx context.Context, businessID string) ([]
 	return res, nil
 }
 
-// GetInstagramActors returns all instagram accounts
+// GetInstagramActors returns all instagram accounts.
 func (ps *PageService) GetInstagramActors(ctx context.Context, businessID string) ([]InstagramActor, error) {
 	res := []InstagramActor{}
 	route := fb.NewRoute(Version, "/%s/instagram_accounts", businessID).Limit(1000).Fields(instagramActorFields...)
@@ -95,7 +95,7 @@ func (ps *PageService) GetInstagramActors(ctx context.Context, businessID string
 	return res, nil
 }
 
-// Get returns a single page
+// Get returns a single page.
 func (ps *PageService) Get(ctx context.Context, id string) (*Page, error) {
 	res := &Page{}
 	route := fb.NewRoute(Version, "/%s", id).Fields(pageFields...)
@@ -104,13 +104,14 @@ func (ps *PageService) Get(ctx context.Context, id string) (*Page, error) {
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
 
 	return res, nil
 }
 
-// GetInstagramActor returns a single instagram actor
+// GetInstagramActor returns a single instagram actor.
 func (ps *PageService) GetInstagramActor(ctx context.Context, id string) (*InstagramActor, error) {
 	res := &InstagramActor{}
 	route := fb.NewRoute(Version, "/%s", id).Fields(instagramActorFields...)
@@ -127,13 +128,13 @@ var (
 	instagramActorFields = []string{"id", "username"}
 )
 
-// Page represents a facebook page
+// Page represents a facebook page.
 type Page struct {
 	ID                  string `json:"id"`
 	GlobalBrandPageName string `json:"global_brand_page_name"`
 }
 
-// InstagramActor represents an instagram actor
+// InstagramActor represents an instagram actor.
 type InstagramActor struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`

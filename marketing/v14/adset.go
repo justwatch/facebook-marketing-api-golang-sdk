@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -13,12 +13,12 @@ const (
 	adsetListLimit = 50
 )
 
-// AdsetService is used for working with adsets
+// AdsetService is used for working with adsets.
 type AdsetService struct {
 	c *fb.Client
 }
 
-// Get returns a single Adset
+// Get returns a single Adset.
 func (as *AdsetService) Get(ctx context.Context, id string, fields ...string) (*Adset, error) {
 	if len(fields) == 0 {
 		fields = AdsetFields
@@ -29,12 +29,14 @@ func (as *AdsetService) Get(ctx context.Context, id string, fields ...string) (*
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// GetDeliveryEstimate returns the delivery_estimate mau for a given adset
+// GetDeliveryEstimate returns the delivery_estimate mau for a given adset.
 func (as *AdsetService) GetDeliveryEstimate(ctx context.Context, id string, t *Targeting) (uint64, error) {
 	r := fb.NewRoute(Version, "/%s/delivery_estimate", id).Limit(10).Fields("estimate_mau_upper_bound")
 
@@ -54,10 +56,11 @@ func (as *AdsetService) GetDeliveryEstimate(ctx context.Context, id string, t *T
 			size = e.EstimateMauUpperBound
 		}
 	}
+
 	return uint64(size), nil
 }
 
-// Create uploads a new adset, returns the fields and returns the created adset
+// Create uploads a new adset, returns the fields and returns the created adset.
 func (as *AdsetService) Create(ctx context.Context, a Adset) (string, fb.Time, error) {
 	if a.ID != "" {
 		return "", fb.Time{}, fmt.Errorf("cannot create adset that already exists: %s", a.ID)
@@ -78,7 +81,7 @@ func (as *AdsetService) Create(ctx context.Context, a Adset) (string, fb.Time, e
 	return res.ID, res.UpdatedTime, nil
 }
 
-// Update updates an adset
+// Update updates an adset.
 func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	if a.ID == "" {
 		return fb.Time{}, errors.New("cannot update adset without id")
@@ -93,56 +96,62 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	} else if !res.Success && res.ID == "" {
 		return fb.Time{}, fmt.Errorf("updating failed")
 	}
+
 	return res.UpdatedTime, nil
 }
 
-// List returns a list of adsets for an account
+// List returns a list of adsets for an account.
 func (as *AdsetService) List(account string, fields []string) *AdsetListCall {
 	if len(fields) == 0 {
 		fields = AdsetFields
 	}
+
 	return &AdsetListCall{
 		RouteBuilder: fb.NewRoute(Version, "/act_%s/adsets", account).Limit(adsetListLimit).Fields(fields...),
 		c:            as.c,
 	}
 }
 
-// ListOfCampaign returns an adsetlistcall for listing the adsets of a campaign id
+// ListOfCampaign returns an adsetlistcall for listing the adsets of a campaign id.
 func (as *AdsetService) ListOfCampaign(campaignID string, fields []string) *AdsetListCall {
 	if len(fields) == 0 {
 		fields = AdsetFields
 	}
+
 	return &AdsetListCall{
 		RouteBuilder: fb.NewRoute(Version, "/%s/adsets", campaignID).Limit(adsetListLimit).Fields(fields...),
 		c:            as.c,
 	}
 }
 
-// CountAdSets returns the total amount of active adsets
+// CountAdSets returns the total amount of active adsets.
 func (as *AdsetService) CountAdSets(ctx context.Context, accountID string) (uint64, error) {
 	sc := &fb.SummaryContainer{}
 	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/act_%s/adsets", accountID).Limit(0).Summary("1").String(), sc)
+
 	return sc.Summary.TotalCount, err
 }
 
-// AdsetListCall is used for Listing adsets
+// AdsetListCall is used for Listing adsets.
 type AdsetListCall struct {
 	*fb.RouteBuilder
 	c *fb.Client
 }
 
-// Do calls the graph API
+// Do calls the graph API.
 func (as *AdsetListCall) Do(ctx context.Context) ([]Adset, error) {
 	res := []Adset{}
 	err := as.c.GetList(ctx, as.RouteBuilder.String(), &res)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// AdsetFields is a selection of fields to be returned
-var AdsetFields = []string{"bid_amount", "attribution_spec", "bid_info",
+// AdsetFields is a selection of fields to be returned.
+var AdsetFields = []string{
+	"bid_amount", "attribution_spec", "bid_info",
 	"billing_event", "campaign_id", "created_time",
 	"daily_budget", "destination_type", "effective_status",
 	"daily_spend_cap", "daily_min_spend_target", "end_time",
@@ -155,7 +164,8 @@ var AdsetFields = []string{"bid_amount", "attribution_spec", "bid_info",
 	"time_based_ad_rotation_id_blocks", "time_based_ad_rotation_intervals",
 	"pacing_type", "promoted_object", "recommendations",
 	"source_adset", "status", "updated_time", "use_new_app_click",
-	"campaign{name,objective,effective_status}"}
+	"campaign{name,objective,effective_status}",
+}
 
 // Adset from https://developers.facebook.com/docs/marketing-api/reference/ad-campaign
 type Adset struct {
@@ -194,14 +204,14 @@ type Adset struct {
 	TargetingOptimizationTypes map[string]int32       `json:"targeting_optimization_types,omitempty"`
 }
 
-// FrequencyControlSpec controls the frequency of an adset
+// FrequencyControlSpec controls the frequency of an adset.
 type FrequencyControlSpec struct {
 	Event        string `json:"event"`
 	IntervalDays uint64 `json:"interval_days"`
 	MaxFrequency uint64 `json:"max_frequency"`
 }
 
-// PromotedObject contains the id of a promoted page
+// PromotedObject contains the id of a promoted page.
 type PromotedObject struct {
 	PageID             string `json:"page_id,omitempty"`
 	PixelID            string `json:"pixel_id,omitempty"`
@@ -210,7 +220,7 @@ type PromotedObject struct {
 	CustomConversionID string `json:"custom_conversion_id,omitempty"`
 }
 
-// Targeting contains all the targeting information of an adset
+// Targeting contains all the targeting information of an adset.
 type Targeting struct {
 	// inventories
 	PublisherPlatforms []string `json:"publisher_platforms,omitempty"`
@@ -244,7 +254,7 @@ type Targeting struct {
 
 // FlexibleSpec is used for targeting
 // not used fields: RelationshipStatuses []int
-//`json:"relationship_statuses,omitempty"
+
 type FlexibleSpec struct {
 	Interests         []IDContainer `json:"interests,omitempty"`
 	Behaviors         []IDContainer `json:"behaviors,omitempty"`
@@ -257,13 +267,13 @@ type FlexibleSpec struct {
 	EducationStatuses []int         `json:"education_statuses,omitempty"`
 }
 
-// IDContainer contains an ID and a name
+// IDContainer contains an ID and a name.
 type IDContainer struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-// GeoLocations is a set of countries, cities, and regions that can be targeted
+// GeoLocations is a set of countries, cities, and regions that can be targeted.
 type GeoLocations struct {
 	Countries     []string `json:"countries,omitempty"`
 	LocationTypes []string `json:"location_types,omitempty"`
@@ -272,7 +282,7 @@ type GeoLocations struct {
 	Zips          []Zip    `json:"zips,omitempty"`
 }
 
-// City can be targeted
+// City can be targeted.
 type City struct {
 	Country      string `json:"country"`
 	DistanceUnit string `json:"distance_unit"`
@@ -283,14 +293,14 @@ type City struct {
 	RegionID     string `json:"region_id"`
 }
 
-// Region can be targeted
+// Region can be targeted.
 type Region struct {
 	Key     string `json:"key"`
 	Name    string `json:"name"`
 	Country string `json:"country"`
 }
 
-// Zip can be targeted
+// Zip can be targeted.
 type Zip struct {
 	Key           string `json:"key"`
 	Name          string `json:"name"`
@@ -299,7 +309,7 @@ type Zip struct {
 	Country       string `json:"country"`
 }
 
-// DailyOutcomesCurve talk to phillip
+// DailyOutcomesCurve talk to phillip.
 type DailyOutcomesCurve struct {
 	Spend       float64 `json:"spend"`
 	Reach       float64 `json:"reach"`
@@ -307,7 +317,7 @@ type DailyOutcomesCurve struct {
 	Actions     float64 `json:"actions"`
 }
 
-// Data is a single delivery estimate
+// Data is a single delivery estimate.
 type Data struct {
 	DailyOutcomesCurve    []DailyOutcomesCurve `json:"daily_outcomes_curve"`
 	EstimateDau           int64                `json:"estimate_dau"`
@@ -317,7 +327,7 @@ type Data struct {
 	EstimateReady         bool                 `json:"estimate_ready"`
 }
 
-// DeliveryEstimate is a collection of Data structs
+// DeliveryEstimate is a collection of Data structs.
 type DeliveryEstimate struct {
 	Data []Data `json:"data"`
 }

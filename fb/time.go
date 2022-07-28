@@ -11,7 +11,7 @@ type Time time.Time
 
 const tsFormat = "2006-01-02T15:04:05-0700"
 
-// UnmarshalJSON implements json.Unmarshaler
+// UnmarshalJSON implements json.Unmarshaler.
 func (t *Time) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
@@ -26,10 +26,11 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*t = Time(ts)
+
 	return nil
 }
 
-// MarshalJSON implements json.Marshaler
+// MarshalJSON implements json.Marshaler.
 func (t Time) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Time(t).Format(tsFormat))
 }
