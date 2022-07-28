@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -11,13 +11,13 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// PostService works on posts
+// PostService works on posts.
 type PostService struct {
 	c *fb.Client
 	*fb.StatsContainer
 }
 
-// Get returns a single post
+// Get returns a single post.
 func (ps *PostService) Get(ctx context.Context, id string) (*Post, error) {
 	res := &Post{}
 	err := ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields(postFields...).String(), res)
@@ -25,6 +25,7 @@ func (ps *PostService) Get(ctx context.Context, id string) (*Post, error) {
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
 	err = ps.getPostAttachments(ctx, res)
@@ -48,6 +49,7 @@ func (ps *PostService) getPostAttachments(ctx context.Context, post *Post) error
 		if fb.IsNotFound(err) {
 			return nil
 		}
+
 		return err
 	}
 	pA := StoryAttachment{}
@@ -95,7 +97,7 @@ func (ps *PostService) getPostAttachments(ctx context.Context, post *Post) error
 	return nil
 }
 
-// GetReactions returns the amount of reactions for a post
+// GetReactions returns the amount of reactions for a post.
 func (ps *PostService) GetReactions(ctx context.Context, postID string) (Reactions, error) {
 	m := Reactions{}
 	for _, r := range reactions {
@@ -113,15 +115,16 @@ func (ps *PostService) GetReactions(ctx context.Context, postID string) (Reactio
 	return m, nil
 }
 
-// CountComments returns the total amount of parent comments
+// CountComments returns the total amount of parent comments.
 func (ps *PostService) CountComments(ctx context.Context, postID string) (uint64, error) {
 	sc := &fb.SummaryContainer{}
 	err := ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s/comments", postID).Limit(0).Summary("1").String(), sc)
+
 	return sc.Summary.TotalCount, err
 }
 
 // ListComments creates a new CommentListCall
-// Filters may be "stream" or "toplevel"
+// Filters may be "stream" or "toplevel".
 func (ps *PostService) ListComments(postID, filter string) *CommentListCall {
 	return &CommentListCall{
 		RouteBuilder:   fb.NewRoute(Version, "/%s/comments", postID).Fields("message", "message_tags", "parent", "from", "created_time").Limit(100).Order("chronological").Filter(filter),
@@ -131,7 +134,7 @@ func (ps *PostService) ListComments(postID, filter string) *CommentListCall {
 	}
 }
 
-// CommentListCall is used for listing comments of a post
+// CommentListCall is used for listing comments of a post.
 type CommentListCall struct {
 	*fb.RouteBuilder
 	c  *fb.Client
@@ -139,7 +142,7 @@ type CommentListCall struct {
 	*fb.StatsContainer
 }
 
-// List performs the CommentListCall and returns all comments as slice
+// List performs the CommentListCall and returns all comments as slice.
 func (clc *CommentListCall) List(ctx context.Context) ([]Comment, error) {
 	stats := clc.StatsContainer.AddStats(clc.id)
 	if stats == nil {
@@ -152,6 +155,7 @@ func (clc *CommentListCall) List(ctx context.Context) ([]Comment, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -165,6 +169,7 @@ func (clc *CommentListCall) Read(ctx context.Context, c chan<- Comment) error {
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
+
 		return clc.c.ReadList(ctx, clc.RouteBuilder.String(), jres)
 	})
 	wg.Go(func() error {
@@ -178,8 +183,10 @@ func (clc *CommentListCall) Read(ctx context.Context, c chan<- Comment) error {
 			c <- v
 		}
 		clc.StatsContainer.RemoveStats(clc.id)
+
 		return nil
 	})
+
 	return wg.Wait()
 }
 
@@ -229,22 +236,9 @@ func (clc *CommentListCall) Read(ctx context.Context, c chan<- Comment) error {
 // "updated_time",
 // "via",
 // "video_buying_eligibility",
-// "width",
+// "width",.
 var (
-	postFields = []string{
-
-		"call_to_action",
-
-		"from",
-
-		"id",
-
-		"message",
-
-		"picture",
-
-		"promotable_id",
-	}
+	postFields            = []string{"call_to_action", "from", "id", "message", "picture", "promotable_id"}
 	reactions             = []string{"LIKE", "LOVE", "WOW", "HAHA", "SAD", "ANGRY", "THANKFUL"}
 	postAttachmentsFields = []string{"description", "name", "type", "url", "target", "media_type"}
 )
@@ -312,9 +306,8 @@ type Post struct {
 		Name     string `json:"name"`
 		ID       string `json:"id"`
 	} `json:"application"`
-	Coordinates struct {
-	} `json:"coordinates"`
-	Actions []struct {
+	Coordinates struct{} `json:"coordinates"`
+	Actions     []struct {
 		Name string `json:"name"`
 		Link string `json:"link"`
 	} `json:"actions"`
@@ -337,7 +330,7 @@ type StoryAttachment struct {
 	Target              *StoryAttachmentTarget `json:"target,omitempty"`
 }
 
-// StoryAttachments wraps the data slice around the StoryAttachment(s)
+// StoryAttachments wraps the data slice around the StoryAttachment(s).
 type StoryAttachments struct {
 	Data []StoryAttachment `json:"data,omitempty"`
 }
@@ -355,7 +348,7 @@ type StoryAttachmentMedia struct {
 	Source string      `json:"source,omitempty"`
 }
 
-// Comment represents a comment on a facebook post
+// Comment represents a comment on a facebook post.
 type Comment struct {
 	ID                       string          `json:"id,omitempty"`
 	Attachment               json.RawMessage `json:"attachment,omitempty"`
@@ -376,7 +369,7 @@ type Comment struct {
 	UserLikes                bool            `json:"user_likes,omitempty"`
 }
 
-// MessageTag represents a tagged user or site in a comment
+// MessageTag represents a tagged user or site in a comment.
 type MessageTag struct {
 	ID     string `json:"id,omitempty"`
 	Name   string `json:"name,omitempty"`
@@ -385,11 +378,11 @@ type MessageTag struct {
 	Length int    `json:"length,omitempty"`
 }
 
-// User represents a facebook user
+// User represents a facebook user.
 type User struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }
 
-// Reactions contains a reation and how often it was performed on an object
+// Reactions contains a reation and how often it was performed on an object.
 type Reactions map[string]uint64

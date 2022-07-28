@@ -35,5 +35,6 @@ func appendJSON(data []byte, v interface{}) (int, error) {
 	target = reflect.AppendSlice(target, reflect.ValueOf(dest).Elem())
 
 	vPtr.Elem().Set(target)
+
 	return slicePtr.Elem().Len(), nil
 }

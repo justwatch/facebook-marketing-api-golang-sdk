@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// SearchService performs searches on the graph API
+// SearchService performs searches on the graph API.
 type SearchService struct {
 	c *fb.Client
 }
@@ -16,7 +16,7 @@ const (
 	getDevicesResultsLimit = 5000
 )
 
-// GetAdGeoLocations returns all AdGeoLocations
+// GetAdGeoLocations returns all AdGeoLocations.
 func (s *SearchService) GetAdGeoLocations(ctx context.Context) ([]AdGeoLocation, error) {
 	rb := fb.NewRoute(Version, "/search").
 		Type("adgeolocation").
@@ -27,6 +27,7 @@ func (s *SearchService) GetAdGeoLocations(ctx context.Context) ([]AdGeoLocation,
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -43,10 +44,11 @@ func (s *SearchService) GetRegions(ctx context.Context, country string) ([]AdGeo
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// AdGeoLocation contains different geolocation types to be used for adset targeting
+// AdGeoLocation contains different geolocation types to be used for adset targeting.
 type AdGeoLocation struct {
 	Key            string `json:"key"`
 	Name           string `json:"name"`
@@ -56,7 +58,7 @@ type AdGeoLocation struct {
 	SupportsCity   bool   `json:"supports_city"`
 }
 
-// GetDevices returns all devices
+// GetDevices returns all devices.
 func (s *SearchService) GetDevices(ctx context.Context) ([]Device, error) {
 	rb := fb.NewRoute(Version, "/search").
 		Type("adTargetingCategory").
@@ -67,10 +69,11 @@ func (s *SearchService) GetDevices(ctx context.Context) ([]Device, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// Device contains device information to be used for adset targeting
+// Device contains device information to be used for adset targeting.
 type Device struct {
 	Name         string `json:"name"`
 	Description  string `json:"description"`
@@ -79,7 +82,7 @@ type Device struct {
 	Type         string `json:"type"`
 }
 
-// GetOperatingSystems returns all operating systems
+// GetOperatingSystems returns all operating systems.
 func (s *SearchService) GetOperatingSystems(ctx context.Context) ([]OperatingSystem, error) {
 	rb := fb.NewRoute(Version, "/search").
 		Type("adTargetingCategory").
@@ -90,10 +93,11 @@ func (s *SearchService) GetOperatingSystems(ctx context.Context) ([]OperatingSys
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// OperatingSystem contains information about an user OS to be used for adset targeting
+// OperatingSystem contains information about an user OS to be used for adset targeting.
 type OperatingSystem struct {
 	Type        string `json:"type"`
 	Name        string `json:"name"`
@@ -101,7 +105,7 @@ type OperatingSystem struct {
 	Description string `json:"description"`
 }
 
-// GetAdLocales returns all ad locales
+// GetAdLocales returns all ad locales.
 func (s *SearchService) GetAdLocales(ctx context.Context) ([]AdLocale, error) {
 	rb := fb.NewRoute(Version, "/search").
 		Type("adlocale").
@@ -111,16 +115,17 @@ func (s *SearchService) GetAdLocales(ctx context.Context) ([]AdLocale, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// AdLocale can be used for locale adset targeting
+// AdLocale can be used for locale adset targeting.
 type AdLocale struct {
 	Key  int    `json:"key"`
 	Name string `json:"name"`
 }
 
-// TargetingOptionStatus is the json response of the ValidateInterest request
+// TargetingOptionStatus is the json response of the ValidateInterest request.
 type TargetingOptionStatus struct {
 	ID            string `json:"id"`
 	CurrentStatus string `json:"current_status"`
@@ -130,7 +135,7 @@ type TargetingOptionStatus struct {
 	} `json:"future_plan"`
 }
 
-// ValidateInterests validates a list of interests and returns a list of valid and a list of invalid IDs
+// ValidateInterests validates a list of interests and returns a list of valid and a list of invalid IDs.
 func (s *SearchService) ValidateInterests(ctx context.Context, externalIDs []string) (validIDs []string, invalidIDs []string, err error) {
 	rb := fb.NewRoute(Version, "/search").
 		Type("targetingoptionstatus").
@@ -148,7 +153,7 @@ func (s *SearchService) ValidateInterests(ctx context.Context, externalIDs []str
 		} else {
 			invalidIDs = append(invalidIDs, targetingOption.ID)
 		}
-
 	}
+
 	return validIDs, invalidIDs, nil
 }

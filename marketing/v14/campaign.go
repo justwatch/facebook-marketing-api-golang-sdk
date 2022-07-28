@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// CampaignService works with campaigns
+// CampaignService works with campaigns.
 type CampaignService struct {
 	c *fb.Client
 }
 
-// Get returns a single campaign
+// Get returns a single campaign.
 func (cs *CampaignService) Get(ctx context.Context, id string, fields ...string) (*Campaign, error) {
 	if len(fields) == 0 {
 		fields = campaignFields
@@ -24,12 +24,14 @@ func (cs *CampaignService) Get(ctx context.Context, id string, fields ...string)
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// Create uploads a new adset, returns the fields and returns the created adset
+// Create uploads a new adset, returns the fields and returns the created adset.
 func (cs *CampaignService) Create(ctx context.Context, a Campaign) (string, error) {
 	if a.ID != "" {
 		return "", fmt.Errorf("cannot create adset that already exists: %s", a.ID)
@@ -51,7 +53,7 @@ func (cs *CampaignService) Create(ctx context.Context, a Campaign) (string, erro
 	return res.ID, nil
 }
 
-// Update updates an adset
+// Update updates an adset.
 func (cs *CampaignService) Update(ctx context.Context, a Campaign) error {
 	if a.ID == "" {
 		return errors.New("cannot update adset without id")
@@ -66,10 +68,11 @@ func (cs *CampaignService) Update(ctx context.Context, a Campaign) error {
 	} else if !res.Success && res.ID == "" {
 		return fmt.Errorf("updating failed")
 	}
+
 	return nil
 }
 
-// List creates a new CampaignListCall
+// List creates a new CampaignListCall.
 func (cs *CampaignService) List(act string) *CampaignListCall {
 	return &CampaignListCall{
 		RouteBuilder: fb.NewRoute(Version, "/act_%s/campaigns", act).Fields(campaignFieldsShort...).Limit(1000).Filtering(fb.Filter{
@@ -81,19 +84,20 @@ func (cs *CampaignService) List(act string) *CampaignListCall {
 	}
 }
 
-// CampaignListCall is used for listing campaigns
+// CampaignListCall is used for listing campaigns.
 type CampaignListCall struct {
 	*fb.RouteBuilder
 	c *fb.Client
 }
 
-// Do performs the CampaignListCall and returns all campaigns as slice
+// Do performs the CampaignListCall and returns all campaigns as slice.
 func (csc *CampaignListCall) Do(ctx context.Context) ([]Campaign, error) {
 	res := []Campaign{}
 	err := csc.c.GetList(ctx, csc.RouteBuilder.String(), &res)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -126,7 +130,7 @@ var campaignFields = []string{
 	"updated_time",
 }
 
-// campaignFieldsShort are the fields required for the Sub Campaign Group sync
+// campaignFieldsShort are the fields required for the Sub Campaign Group sync.
 var campaignFieldsShort = []string{
 	"id",
 	"name",

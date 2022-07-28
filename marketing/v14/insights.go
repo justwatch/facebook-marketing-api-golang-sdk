@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// InsightsService contains all methods for working on audiences
+// InsightsService contains all methods for working on audiences.
 type InsightsService struct {
 	l log.Logger
 	c *fb.Client
@@ -28,7 +28,7 @@ func newInsightsService(l log.Logger, c *fb.Client) *InsightsService {
 	}
 }
 
-// NewReport creates a new InsightsRequest
+// NewReport creates a new InsightsRequest.
 func (is *InsightsService) NewReport(account string) *InsightsRequest {
 	return &InsightsRequest{
 		InsightsService: is,
@@ -36,7 +36,7 @@ func (is *InsightsService) NewReport(account string) *InsightsRequest {
 	}
 }
 
-// NewReportOfCampaign creates a new InsightsRequest
+// NewReportOfCampaign creates a new InsightsRequest.
 func (is *InsightsService) NewReportOfCampaign(campaignID string) *InsightsRequest {
 	return &InsightsRequest{
 		InsightsService: is,
@@ -44,19 +44,20 @@ func (is *InsightsService) NewReportOfCampaign(campaignID string) *InsightsReque
 	}
 }
 
-// InsightsRequest is used to build a new request for creating an insights run
+// InsightsRequest is used to build a new request for creating an insights run.
 type InsightsRequest struct {
 	*InsightsService
 	*fb.RouteBuilder
 }
 
-// Download returns all insights from the request in one slice
+// Download returns all insights from the request in one slice.
 func (ir *InsightsRequest) Download(ctx context.Context) ([]Insight, error) {
 	res := []Insight{}
 	err := ir.c.GetList(ctx, ir.RouteBuilder.String(), &res)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -91,7 +92,7 @@ func (ir *InsightsRequest) GenerateReport(ctx context.Context, c chan<- Insight)
 		url := fb.NewRoute(Version, "/%s", run.ReportRunID).String()
 		e := ir.c.Delete(ctx, url)
 		if e != nil {
-			level.Warn(ir.l).Log("msg", "err deleting report run", "id", run.ReportRunID, "err", e, "url", url)
+			_ = level.Warn(ir.l).Log("msg", "err deleting report run", "id", run.ReportRunID, "err", e, "url", url)
 		}
 	}()
 
@@ -115,6 +116,7 @@ func (ir *InsightsRequest) GenerateReport(ctx context.Context, c chan<- Insight)
 
 		if run.AsyncStatus == "Job Completed" && run.AsyncPercentCompletion == 100 && !run.IsRunning {
 			stats.SetCreated()
+
 			break
 		}
 		stats.SetProgress(uint64(run.AsyncPercentCompletion), 100)
@@ -157,7 +159,7 @@ func (ir *InsightsRequest) GenerateReport(ctx context.Context, c chan<- Insight)
 	return count, nil
 }
 
-// Insight contains insight data for an facebook graph API object, broken down by the desired day
+// Insight contains insight data for an facebook graph API object, broken down by the desired day.
 type Insight struct {
 	AccountID                        string                 `json:"account_id"`
 	Actions                          ActionTypeValue        `json:"actions"`
@@ -194,7 +196,7 @@ type Insight struct {
 	Country                          string                 `json:"country"`
 }
 
-// GetAge returns the min and max age from the insights age field
+// GetAge returns the min and max age from the insights age field.
 func (i Insight) GetAge() (uint64, uint64, error) {
 	parts := strings.Split(i.Age, "-")
 	var minAge, maxAge uint64
@@ -212,10 +214,11 @@ func (i Insight) GetAge() (uint64, uint64, error) {
 		minAge = 65
 		maxAge = 100
 	}
+
 	return minAge, maxAge, nil
 }
 
-// ActionTypeValue is a kv store
+// ActionTypeValue is a kv store.
 type ActionTypeValue []struct {
 	ActionType       string  `json:"action_type"`
 	ActionVideoSound string  `json:"action_video_sound"`
@@ -231,7 +234,7 @@ type ActionTypeValue []struct {
 	Click28d float64 `json:"28d_click,string"`
 }
 
-// GetValue returns the sum of the values with the given action type
+// GetValue returns the sum of the values with the given action type.
 func (atv ActionTypeValue) GetValue(actionType string) float64 {
 	var value float64
 	for _, a := range atv {
@@ -239,10 +242,11 @@ func (atv ActionTypeValue) GetValue(actionType string) float64 {
 			value += a.Value
 		}
 	}
+
 	return value
 }
 
-// GetReactions returns a map with reactions
+// GetReactions returns a map with reactions.
 func (atv ActionTypeValue) GetReactions() map[string]uint64 {
 	res := map[string]uint64{}
 	for _, a := range atv {

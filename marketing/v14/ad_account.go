@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
 )
 
-// AdAccountService works with ad accounts
+// AdAccountService works with ad accounts.
 type AdAccountService struct {
 	c *fb.Client
 }
 
-// List lists all ad accounts that belong to this business
+// List lists all ad accounts that belong to this business.
 func (aas *AdAccountService) List(ctx context.Context, businessID string) ([]AdAccount, error) {
 	res := []AdAccount{}
 	rb := fb.NewRoute(Version, "/%s/owned_ad_accounts", businessID).Limit(1000).Fields("name", "currency", "account_id")
@@ -19,10 +19,11 @@ func (aas *AdAccountService) List(ctx context.Context, businessID string) ([]AdA
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// AdAccount represents an ad account
+// AdAccount represents an ad account.
 type AdAccount struct {
 	Name      string `json:"name"`
 	AccountID string `json:"account_id"`

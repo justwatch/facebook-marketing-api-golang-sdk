@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// AdService works with Ads
+// AdService works with Ads.
 type AdService struct {
 	c *fb.Client
 }
 
-// Get returns a single ad
+// Get returns a single ad.
 func (as *AdService) Get(ctx context.Context, id string) (*Ad, error) {
 	res := &Ad{}
 	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields("id", "creative", "name", "account_id", "adset_id",
@@ -25,12 +25,14 @@ func (as *AdService) Get(ctx context.Context, id string) (*Ad, error) {
 		if fb.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// Create uploads a new adset, returns the fields and returns the created adset
+// Create uploads a new adset, returns the fields and returns the created adset.
 func (as *AdService) Create(ctx context.Context, a Ad) (string, error) {
 	if a.ID != "" {
 		return "", fmt.Errorf("cannot create adset that already exists: %s", a.ID)
@@ -51,7 +53,7 @@ func (as *AdService) Create(ctx context.Context, a Ad) (string, error) {
 	return res.ID, nil
 }
 
-// Update updates an adset
+// Update updates an adset.
 func (as *AdService) Update(ctx context.Context, a Ad) error {
 	if a.ID == "" {
 		return errors.New("cannot update adset without id")
@@ -66,10 +68,11 @@ func (as *AdService) Update(ctx context.Context, a Ad) error {
 	} else if !res.Success && res.ID == "" {
 		return fmt.Errorf("updating failed")
 	}
+
 	return nil
 }
 
-// List returns all ads of an account
+// List returns all ads of an account.
 func (as *AdService) List(act string) *AdListCall {
 	return &AdListCall{
 		RouteBuilder: fb.NewRoute(Version, "/act_%s/ads", act).Fields("adset_id", "creative", "id", "name", "account_id", "adset{id}", "adcreatives{id}").Limit(1000),
@@ -77,7 +80,7 @@ func (as *AdService) List(act string) *AdListCall {
 	}
 }
 
-// ListOfAdset returns all ads of an adset
+// ListOfAdset returns all ads of an adset.
 func (as *AdService) ListOfAdset(adsetID string) *AdListCall {
 	return &AdListCall{
 		RouteBuilder: fb.NewRoute(Version, "/%s/ads", adsetID).Fields("id", "adset{id}", "adcreatives{id}").Limit(1000),
@@ -85,28 +88,30 @@ func (as *AdService) ListOfAdset(adsetID string) *AdListCall {
 	}
 }
 
-// AdListCall is used for Listing adsets
+// AdListCall is used for Listing adsets.
 type AdListCall struct {
 	*fb.RouteBuilder
 	c *fb.Client
 }
 
-// Do calls the graph API
+// Do calls the graph API.
 func (as *AdListCall) Do(ctx context.Context) ([]Ad, error) {
 	res := []Ad{}
 	err := as.c.GetList(ctx, as.RouteBuilder.String(), &res)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
-// Do calls the graph API
+// Do calls the graph API.
 func (as *AdListCall) Read(ctx context.Context, c chan<- Ad) error {
 	jres := make(chan json.RawMessage)
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
+
 		return as.c.ReadList(ctx, as.RouteBuilder.String(), jres)
 	})
 	wg.Go(func() error {
@@ -118,12 +123,14 @@ func (as *AdListCall) Read(ctx context.Context, c chan<- Ad) error {
 			}
 			c <- v
 		}
+
 		return nil
 	})
+
 	return wg.Wait()
 }
 
-// Ad represents a Facebook Ad
+// Ad represents a Facebook Ad.
 type Ad struct {
 	AccountID     string                  `json:"account_id,omitempty"`
 	ID            string                  `json:"id,omitempty"`
@@ -138,7 +145,7 @@ type Ad struct {
 	} `json:"adcreatives,omitempty"`
 }
 
-// ConversionActionQuery contains tracking specs
+// ConversionActionQuery contains tracking specs.
 type ConversionActionQuery struct {
 	ActionType []string `json:"action.type,omitempty"`
 	FbPixel    []string `json:"fb_pixel,omitempty"`

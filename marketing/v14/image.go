@@ -1,4 +1,4 @@
-package v12
+package v14
 
 import (
 	"context"
@@ -13,21 +13,20 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	regexImageFilename = regexp.MustCompile(`^\d+_(\d+)_\d+_[a-z]\.([a-z]+)$`)
-)
+var regexImageFilename = regexp.MustCompile(`^\d+_(\d+)_\d+_[a-z]\.([a-z]+)$`)
 
-// ImageService works with ad images
+// ImageService works with ad images.
 type ImageService struct {
 	c *fb.Client
 }
 
-// ReadList writes all ad images from an account to res
+// ReadList writes all ad images from an account to res.
 func (is *ImageService) ReadList(ctx context.Context, act string, res chan<- Image) error {
 	jres := make(chan json.RawMessage)
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
+
 		return is.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/adimages", act).Fields("name", "hash", "url", "width", "height").Limit(1000).String(), jres)
 	})
 	wg.Go(func() error {
@@ -45,12 +44,14 @@ func (is *ImageService) ReadList(ctx context.Context, act string, res chan<- Ima
 
 			res <- v
 		}
+
 		return nil
 	})
+
 	return wg.Wait()
 }
 
-// Upload uploads an image to Facebook
+// Upload uploads an image to Facebook.
 func (is *ImageService) Upload(ctx context.Context, act, name string, r io.Reader) (*Image, error) {
 	fur := &fileUploadResponse{}
 	err := is.c.UploadFile(ctx, fb.NewRoute(Version, "/act_%s/adimages", act).String(), name, r, nil, fur)
@@ -69,6 +70,7 @@ func (is *ImageService) Upload(ctx context.Context, act, name string, r io.Reade
 	}
 
 	im.ID = id
+
 	return im, nil
 }
 
@@ -82,10 +84,11 @@ func (is *ImageService) getImageID(s string) (string, error) {
 	if len(parts) < 3 {
 		return "", nil
 	}
+
 	return parts[1], nil
 }
 
-// Image represents an image being uploaded to the creative library
+// Image represents an image being uploaded to the creative library.
 type Image struct {
 	ID                              string   `json:"id,omitempty"`
 	Height                          int      `json:"height,omitempty"`
