@@ -171,6 +171,7 @@ type Insight struct {
 	CampaignID                       string                 `json:"campaign_id"`
 	CampaignName                     string                 `json:"campaign_name"`
 	PublisherPlatform                string                 `json:"publisher_platform"`
+	PlatformPosition                 string                 `json:"platform_position"`
 	Clicks                           uint64                 `json:"clicks,string"`
 	DateStart                        string                 `json:"date_start"`
 	DateStop                         string                 `json:"date_stop"`
