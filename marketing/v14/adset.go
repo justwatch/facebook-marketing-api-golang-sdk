@@ -253,18 +253,18 @@ type Targeting struct {
 }
 
 // FlexibleSpec is used for targeting
-// not used fields: RelationshipStatuses []int
 
 type FlexibleSpec struct {
-	Interests         []IDContainer `json:"interests,omitempty"`
-	Behaviors         []IDContainer `json:"behaviors,omitempty"`
-	LifeEvents        []IDContainer `json:"life_events,omitempty"`
-	WorkEmployers     []IDContainer `json:"work_employers,omitempty"`
-	FamilyStatuses    []IDContainer `json:"family_statuses,omitempty"`
-	WorkPositions     []IDContainer `json:"work_positions,omitempty"`
-	Politics          []IDContainer `json:"politics,omitempty"`
-	EducationMajors   []IDContainer `json:"education_majors,omitempty"`
-	EducationStatuses []int         `json:"education_statuses,omitempty"`
+	Interests            []IDContainer `json:"interests,omitempty"`
+	Behaviors            []IDContainer `json:"behaviors,omitempty"`
+	LifeEvents           []IDContainer `json:"life_events,omitempty"`
+	WorkEmployers        []IDContainer `json:"work_employers,omitempty"`
+	FamilyStatuses       []IDContainer `json:"family_statuses,omitempty"`
+	WorkPositions        []IDContainer `json:"work_positions,omitempty"`
+	Politics             []IDContainer `json:"politics,omitempty"`
+	EducationMajors      []IDContainer `json:"education_majors,omitempty"`
+	EducationStatuses    []int         `json:"education_statuses,omitempty"`
+	RelationshipStatuses []int         `json:"relationship_statuses,omitempty"`
 }
 
 // IDContainer contains an ID and a name.
