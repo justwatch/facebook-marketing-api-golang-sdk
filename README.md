@@ -1,24 +1,7 @@
 # Facebook Marketing API SDK for Golang
-
-<!-- [![Go reference](https://pkg.go.dev/https://github.com/justwatchcom/facebook-marketing-api-golang-sdk)](https://goreportcard.com/report/https://pkg.go.dev/https://github.com/justwatchcom/facebook-marketing-api-golang-sdk) -->
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/justwatchcom/facebook-marketing-api-golang-sdk)](https://goreportcard.com/report/github.com/justwatchcom/facebook-marketing-api-golang-sdk)
-[![](https://godoc.org/github.com/justwatchcom/facebook-marketing-api-golang-sdk?status.svg)](http://godoc.org/github.com/justwatchcom/facebook-marketing-api-golang-sdk)
-
-This go package provides a comprehensive list of methods for interacting with Facebook's Graph Marketing api.
-
----
-
-![JustWatch logo](logo.png)
-
-## You enjoy working with the Facebook Marketing API? We are hiring! 
-
-Find out what open positions we have at the moment and why JustWatch is a great place to work at: https://www.justwatch.com/us/talent
-
----
+Forked from [justwatchcom/facebook-marketing-api-golang-sdk](https://github.com/justwatchcom/facebook-marketing-api-golang-sdk)
 
 The SDK supports crud operations for the following entities:
-
 - ad_account
 - adset
 - custom_conversion
@@ -44,13 +27,13 @@ We assume you already have a Facebook Developer account and configured an `acces
 
 ```go
 import(
-	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/marketing/v14"
+"github.com/toshiNie/facebook-marketing-api-golang-sdk/marketing/v14"
 )
 
 func main(){
-	fbService, _ := v14.New(l, accessToken, appSecret)
-	
-	// [Code snippets from other example below go here]
+fbService, _ := v14.New(l, accessToken, appSecret)
+
+// [Code snippets from other example below go here]
 }
 ```
 
@@ -58,7 +41,7 @@ func main(){
 
 ```go
 c := v14.Campaign{
-	// Populate struct values
+// Populate struct values
 }
 id, _ := fbService.Campaigns.Create(ctx, c)
 ```
@@ -112,9 +95,9 @@ report := fbService.Insights.NewReport(id)
 
 // Configure report
 report.Level("adset").
-	DailyTimeIncrement(true). // get day by day reporting
-		Fields(columns...). // the fields you want your report to have
-			DatePreset("lifetime") // the time period for the report
+DailyTimeIncrement(true). // get day by day reporting
+Fields(columns...). // the fields you want your report to have
+DatePreset("lifetime") // the time period for the report
 
 // pass a channel which gets populated with results
 ch := make(chan v14.Insight)
@@ -122,6 +105,6 @@ nRecords,_ := report.GenerateReport(ctx,ch)
 
 //range over the channel to get Insight objects
 for insight := range ch {
-    fmt.Println("New report result: ", insight)
+fmt.Println("New report result: ", insight)
 }
 ```
