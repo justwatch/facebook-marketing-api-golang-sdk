@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
@@ -88,15 +87,27 @@ func (as *AdCreativeService) GetPreviewURL(ctx context.Context, id, format strin
 	return link, nil
 }
 
+type ReadListRequest struct {
+	*fb.RouteBuilder
+	*AdCreativeService
+}
+
+func (adcs *AdCreativeService) NewReadListRequest(act string) *ReadListRequest {
+	return &ReadListRequest{
+		AdCreativeService: adcs,
+		RouteBuilder:      fb.NewRoute(Version, "/act_%s/ads", act),
+	}
+}
+
 // ReadList writes all adcreatives from an account to res.
-func (as *AdCreativeService) ReadList(ctx context.Context, act string, res chan<- AdCreative) error {
-	stat := as.StatsContainer.AddStats(act)
+func (rlr *ReadListRequest) Do(ctx context.Context, act string, res chan<- AdCreative) error {
+	stat := rlr.AdCreativeService.StatsContainer.AddStats(act)
 	if stat != nil {
 		ctx = stat.AddToContext(ctx)
-		defer as.StatsContainer.RemoveStats(act)
+		defer rlr.AdCreativeService.StatsContainer.RemoveStats(act)
 
 		sc := &fb.SummaryContainer{}
-		err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/act_%s/ads", act).Limit(0).Summary("1").String(), sc)
+		err := rlr.AdCreativeService.c.GetJSON(ctx, fb.NewRoute(Version, "/act_%s/ads", act).Limit(0).Summary("1").String(), sc)
 		if err == nil {
 			stat.SetProgress(0, sc.Summary.TotalCount)
 		}
@@ -106,16 +117,7 @@ func (as *AdCreativeService) ReadList(ctx context.Context, act string, res chan<
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
-
-		return as.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/ads", act).
-			Fields("adcreatives{id,account_id,call_to_action_type,effective_instagram_story_id,effective_object_story_id,image_hash,image_url,instagram_actor_id,instagram_permalink_url,instagram_story_id,link_og_id,link_url,name,object_id,object_story_id,object_story_spec,object_type,object_url,status,thumbnail_url,title,video_id}").
-			Limit(adCreativeReadListLimit).
-			Filtering(fb.Filter{
-				Field:    "updated_time",
-				Operator: "GREATER_THAN",
-				Value:    time.Now().AddDate(0, -2, 0).Unix(),
-			}).
-			String(), jres)
+		return rlr.AdCreativeService.c.ReadList(ctx, rlr.RouteBuilder.String(), jres)
 	})
 	wg.Go(func() error {
 		for e := range jres {
