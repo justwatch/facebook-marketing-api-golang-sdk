@@ -98,7 +98,7 @@ func (s *AdCreativeService) List(act string, fields []string) *AdCreativeListCal
 	}
 	return &AdCreativeListCall{
 		c:            s.c,
-		RouteBuilder: fb.NewRoute(Version, "/act_%s/ads", act).Limit(adCreativeReadListLimit).Fields(fields...),
+		RouteBuilder: fb.NewRoute(Version, "/act_%s/adcreatives", act).Limit(adCreativeReadListLimit).Fields(fields...),
 	}
 }
 
