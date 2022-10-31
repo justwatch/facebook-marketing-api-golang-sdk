@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
@@ -88,34 +87,39 @@ func (as *AdCreativeService) GetPreviewURL(ctx context.Context, id, format strin
 	return link, nil
 }
 
-// ReadList writes all adcreatives from an account to res.
-func (as *AdCreativeService) ReadList(ctx context.Context, act string, res chan<- AdCreative) error {
-	stat := as.StatsContainer.AddStats(act)
-	if stat != nil {
-		ctx = stat.AddToContext(ctx)
-		defer as.StatsContainer.RemoveStats(act)
+type AdCreativeListCall struct {
+	*fb.RouteBuilder
+	c *fb.Client
+}
 
-		sc := &fb.SummaryContainer{}
-		err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/act_%s/ads", act).Limit(0).Summary("1").String(), sc)
-		if err == nil {
-			stat.SetProgress(0, sc.Summary.TotalCount)
-		}
+func (s *AdCreativeService) List(act string, fields []string) *AdCreativeListCall {
+	if len(fields) == 0 {
+		fields = Adcreativefields
+	}
+	return &AdCreativeListCall{
+		c:            s.c,
+		RouteBuilder: fb.NewRoute(Version, "/act_%s/ads", act).Limit(adCreativeReadListLimit).Fields(fields...),
+	}
+}
+
+// Do calls the graph API.
+func (s *AdCreativeListCall) Do(ctx context.Context) ([]AdCreative, error) {
+	res := []AdCreative{}
+	err := s.c.GetList(ctx, s.RouteBuilder.String(), &res)
+	if err != nil {
+		return nil, err
 	}
 
+	return res, nil
+}
+
+// ReadList writes all adcreatives from an account to res.
+func (s *AdCreativeListCall) ReadList(ctx context.Context, act string, res chan<- AdCreative) error {
 	jres := make(chan json.RawMessage)
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
-
-		return as.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/ads", act).
-			Fields("adcreatives{id,account_id,call_to_action_type,effective_instagram_story_id,effective_object_story_id,image_hash,image_url,instagram_actor_id,instagram_permalink_url,instagram_story_id,link_og_id,link_url,name,object_id,object_story_id,object_story_spec,object_type,object_url,status,thumbnail_url,title,video_id}").
-			Limit(adCreativeReadListLimit).
-			Filtering(fb.Filter{
-				Field:    "updated_time",
-				Operator: "GREATER_THAN",
-				Value:    time.Now().AddDate(0, -2, 0).Unix(),
-			}).
-			String(), jres)
+		return s.c.ReadList(ctx, s.RouteBuilder.String(), jres)
 	})
 	wg.Go(func() error {
 		for e := range jres {
