@@ -87,37 +87,39 @@ func (as *AdCreativeService) GetPreviewURL(ctx context.Context, id, format strin
 	return link, nil
 }
 
-type ReadListRequest struct {
+type AdCreativeListCall struct {
 	*fb.RouteBuilder
-	*AdCreativeService
+	c *fb.Client
 }
 
-func (adcs *AdCreativeService) NewReadListRequest(act string) *ReadListRequest {
-	return &ReadListRequest{
-		AdCreativeService: adcs,
-		RouteBuilder:      fb.NewRoute(Version, "/act_%s/ads", act),
+func (s *AdCreativeService) List(act string, fields []string) *AdCreativeListCall {
+	if len(fields) == 0 {
+		fields = Adcreativefields
 	}
+	return &AdCreativeListCall{
+		c:            s.c,
+		RouteBuilder: fb.NewRoute(Version, "/act_%s/ads", act).Limit(adCreativeReadListLimit).Fields(fields...),
+	}
+}
+
+// Do calls the graph API.
+func (s *AdCreativeListCall) Do(ctx context.Context) ([]AdCreative, error) {
+	res := []AdCreative{}
+	err := s.c.GetList(ctx, s.RouteBuilder.String(), &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // ReadList writes all adcreatives from an account to res.
-func (rlr *ReadListRequest) Do(ctx context.Context, act string, res chan<- AdCreative) error {
-	stat := rlr.AdCreativeService.StatsContainer.AddStats(act)
-	if stat != nil {
-		ctx = stat.AddToContext(ctx)
-		defer rlr.AdCreativeService.StatsContainer.RemoveStats(act)
-
-		sc := &fb.SummaryContainer{}
-		err := rlr.AdCreativeService.c.GetJSON(ctx, fb.NewRoute(Version, "/act_%s/ads", act).Limit(0).Summary("1").String(), sc)
-		if err == nil {
-			stat.SetProgress(0, sc.Summary.TotalCount)
-		}
-	}
-
+func (s *AdCreativeListCall) ReadList(ctx context.Context, act string, res chan<- AdCreative) error {
 	jres := make(chan json.RawMessage)
 	wg := errgroup.Group{}
 	wg.Go(func() error {
 		defer close(jres)
-		return rlr.AdCreativeService.c.ReadList(ctx, rlr.RouteBuilder.String(), jres)
+		return s.c.ReadList(ctx, s.RouteBuilder.String(), jres)
 	})
 	wg.Go(func() error {
 		for e := range jres {
