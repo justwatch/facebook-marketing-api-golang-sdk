@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
+	"github.com/stavgayer/facebook-marketing-api-golang-sdk/fb"
 )
 
 // PostService works on posts.
