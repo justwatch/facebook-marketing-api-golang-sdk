@@ -31,12 +31,12 @@ func (cs *CampaignService) Get(ctx context.Context, id string, fields ...string)
 	return res, nil
 }
 
-// Create uploads a new adset, returns the fields and returns the created adset.
+// Create uploads a new campaign and returns the created campaign ID.
 func (cs *CampaignService) Create(ctx context.Context, a Campaign) (string, error) {
 	if a.ID != "" {
-		return "", fmt.Errorf("cannot create adset that already exists: %s", a.ID)
+		return "", fmt.Errorf("cannot create new campaign that already exists: %s", a.ID)
 	} else if a.AccountID == "" {
-		return "", errors.New("cannot create adset without account id")
+		return "", errors.New("cannot create new campaign without account id")
 	}
 
 	res := &fb.MinimalResponse{}
@@ -47,16 +47,16 @@ func (cs *CampaignService) Create(ctx context.Context, a Campaign) (string, erro
 	} else if err = res.GetError(); err != nil {
 		return "", fmt.Errorf("got error response from POST to %q: %w", url, err)
 	} else if res.ID == "" {
-		return "", fmt.Errorf("creating adset failed")
+		return "", fmt.Errorf("creating campaign failed")
 	}
 
 	return res.ID, nil
 }
 
-// Update updates an adset.
+// Update updates a campaign.
 func (cs *CampaignService) Update(ctx context.Context, a Campaign) error {
 	if a.ID == "" {
-		return errors.New("cannot update adset without id")
+		return errors.New("cannot update campaign without id")
 	}
 
 	res := &fb.MinimalResponse{}
@@ -66,7 +66,7 @@ func (cs *CampaignService) Update(ctx context.Context, a Campaign) error {
 	} else if err = res.GetError(); err != nil {
 		return err
 	} else if !res.Success && res.ID == "" {
-		return fmt.Errorf("updating failed")
+		return fmt.Errorf("updating campaign failed")
 	}
 
 	return nil
