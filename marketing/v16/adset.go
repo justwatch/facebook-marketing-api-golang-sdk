@@ -201,6 +201,7 @@ type Adset struct {
 	Status                     string                 `json:"status,omitempty"`
 	Targeting                  *Targeting             `json:"targeting,omitempty"`
 	UpdatedTime                fb.Time                `json:"updated_time,omitempty"`
+	IsDynamicCreative          bool                   `json:"is_dynamic_creative,omitempty"`
 	TargetingOptimizationTypes map[string]int32       `json:"targeting_optimization_types,omitempty"`
 	DSABeneficiary             string                 `json:"dsa_beneficiary,omitempty"`
 	DSAPayor                   string                 `json:"dsa_payor,omitempty"`
