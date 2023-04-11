@@ -32,12 +32,12 @@ func (as *AdService) Get(ctx context.Context, id string) (*Ad, error) {
 	return res, nil
 }
 
-// Create uploads a new adset, returns the fields and returns the created adset.
+// Create uploads a new ad, returns the fields and returns the created ad.
 func (as *AdService) Create(ctx context.Context, a Ad) (string, error) {
 	if a.ID != "" {
-		return "", fmt.Errorf("cannot create adset that already exists: %s", a.ID)
+		return "", fmt.Errorf("cannot create ad that already exists: %s", a.ID)
 	} else if a.AccountID == "" {
-		return "", errors.New("cannot create adset without account id")
+		return "", errors.New("cannot create ad without account id")
 	}
 
 	res := &fb.MinimalResponse{}
@@ -47,16 +47,16 @@ func (as *AdService) Create(ctx context.Context, a Ad) (string, error) {
 	} else if err = res.GetError(); err != nil {
 		return "", err
 	} else if res.ID == "" {
-		return "", fmt.Errorf("creating adset failed")
+		return "", fmt.Errorf("creating ad failed")
 	}
 
 	return res.ID, nil
 }
 
-// Update updates an adset.
+// Update updates an ad.
 func (as *AdService) Update(ctx context.Context, a Ad) error {
 	if a.ID == "" {
-		return errors.New("cannot update adset without id")
+		return errors.New("cannot update ad without id")
 	}
 
 	res := &fb.MinimalResponse{}
@@ -66,7 +66,7 @@ func (as *AdService) Update(ctx context.Context, a Ad) error {
 	} else if err = res.GetError(); err != nil {
 		return err
 	} else if !res.Success && res.ID == "" {
-		return fmt.Errorf("updating failed")
+		return fmt.Errorf("updating the ad failed")
 	}
 
 	return nil
@@ -88,7 +88,7 @@ func (as *AdService) ListOfAdset(adsetID string) *AdListCall {
 	}
 }
 
-// AdListCall is used for Listing adsets.
+// AdListCall is used for Listing ads.
 type AdListCall struct {
 	*fb.RouteBuilder
 	c *fb.Client
