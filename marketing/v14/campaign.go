@@ -31,42 +31,42 @@ func (cs *CampaignService) Get(ctx context.Context, id string, fields ...string)
 	return res, nil
 }
 
-// Create uploads a new adset, returns the fields and returns the created adset.
-func (cs *CampaignService) Create(ctx context.Context, a Campaign) (string, error) {
-	if a.ID != "" {
-		return "", fmt.Errorf("cannot create adset that already exists: %s", a.ID)
-	} else if a.AccountID == "" {
-		return "", errors.New("cannot create adset without account id")
+// Create uploads a new campaign, returns the fields and returns the created campaign.
+func (cs *CampaignService) Create(ctx context.Context, c Campaign) (string, error) {
+	if c.ID != "" {
+		return "", fmt.Errorf("cannot create campaign that already exists: %s", c.ID)
+	} else if c.AccountID == "" {
+		return "", errors.New("cannot create campaign without account id")
 	}
 
 	res := &fb.MinimalResponse{}
-	url := fb.NewRoute(Version, "/act_%s/campaigns", a.AccountID).String()
-	err := cs.c.PostJSON(ctx, url, a, res)
+	url := fb.NewRoute(Version, "/act_%s/campaigns", c.AccountID).String()
+	err := cs.c.PostJSON(ctx, url, c, res)
 	if err != nil {
 		return "", fmt.Errorf("could not POST to %q: %w", url, err)
 	} else if err = res.GetError(); err != nil {
 		return "", fmt.Errorf("got error response from POST to %q: %w", url, err)
 	} else if res.ID == "" {
-		return "", fmt.Errorf("creating adset failed")
+		return "", fmt.Errorf("creating campaign failed")
 	}
 
 	return res.ID, nil
 }
 
-// Update updates an adset.
-func (cs *CampaignService) Update(ctx context.Context, a Campaign) error {
-	if a.ID == "" {
-		return errors.New("cannot update adset without id")
+// Update updates an campaign.
+func (cs *CampaignService) Update(ctx context.Context, c Campaign) error {
+	if c.ID == "" {
+		return errors.New("cannot update a campaign without id")
 	}
 
 	res := &fb.MinimalResponse{}
-	err := cs.c.PostJSON(ctx, fb.NewRoute(Version, "/%s", a.ID).String(), a, res)
+	err := cs.c.PostJSON(ctx, fb.NewRoute(Version, "/%s", c.ID).String(), c, res)
 	if err != nil {
 		return err
 	} else if err = res.GetError(); err != nil {
 		return err
 	} else if !res.Success && res.ID == "" {
-		return fmt.Errorf("updating failed")
+		return fmt.Errorf("updating the campaign failed")
 	}
 
 	return nil
@@ -90,7 +90,7 @@ type CampaignListCall struct {
 	c *fb.Client
 }
 
-// Do performs the CampaignListCall and returns all campaigns as slice.
+// Do function performs the CampaignListCall and returns all campaigns as slice.
 func (csc *CampaignListCall) Do(ctx context.Context) ([]Campaign, error) {
 	res := []Campaign{}
 	err := csc.c.GetList(ctx, csc.RouteBuilder.String(), &res)
