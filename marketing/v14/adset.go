@@ -94,7 +94,7 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	} else if err = res.GetError(); err != nil {
 		return fb.Time{}, err
 	} else if !res.Success && res.ID == "" {
-		return fb.Time{}, fmt.Errorf("updating failed")
+		return fb.Time{}, fmt.Errorf("updating the adset failed")
 	}
 
 	return res.UpdatedTime, nil

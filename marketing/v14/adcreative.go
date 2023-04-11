@@ -56,7 +56,7 @@ func (as *AdCreativeService) Create(ctx context.Context, a AdCreative) (string, 
 	} else if err = res.GetError(); err != nil {
 		return "", "", err
 	} else if res.ID.ID == "" {
-		return "", "", fmt.Errorf("creating adset failed")
+		return "", "", fmt.Errorf("creating adcreative failed")
 	}
 
 	return res.ID.ID, res.EffectiveObjectStoryID, nil
@@ -81,7 +81,7 @@ func (as *AdCreativeService) GetPreviewURL(ctx context.Context, id, format strin
 
 	link, ok := doc.Find("iframe").First().Attr("src")
 	if !ok {
-		return "", errors.New("did not find iframge")
+		return "", errors.New("did not find iframe")
 	}
 
 	return link, nil
