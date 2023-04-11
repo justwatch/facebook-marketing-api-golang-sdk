@@ -54,7 +54,7 @@ func (as *AudienceService) Update(ctx context.Context, a CustomAudience) error {
 	} else if err = res.GetError(); err != nil {
 		return err
 	} else if !res.Success && res.ID == "" {
-		return fmt.Errorf("updating failed")
+		return fmt.Errorf("updating the audience failed")
 	}
 
 	return nil
