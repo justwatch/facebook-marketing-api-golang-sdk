@@ -9,7 +9,7 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/justwatchcom/facebook-marketing-api-golang-sdk/fb"
+	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 	"golang.org/x/sync/errgroup"
 )
 
