@@ -119,6 +119,18 @@ func (as *AudienceService) ShareCustom(ctx context.Context, customAudienceID str
 	}{adaccountIDs, relationshipTypes}, &struct{}{})
 }
 
+// UnshareCustom unshares a custom audience with the provided adaccounts.
+func (as *AudienceService) UnshareCustom(ctx context.Context, customAudienceID string, adaccountIDs, relationshipTypes []string) error {
+	if len(adaccountIDs) == 0 {
+		return nil
+	}
+
+	return as.c.DeleteJSON(ctx, fb.NewRoute(Version, "/%s/adaccounts", customAudienceID).String(), struct {
+		Adaccounts       []string `json:"adaccounts"`
+		RelationshipType []string `json:"relationship_type"`
+	}{adaccountIDs, relationshipTypes}, &struct{}{})
+}
+
 // ListAdAccounts lists the accounts an audience is shared to.
 func (as *AudienceService) ListAdAccounts(ctx context.Context, audienceID string) ([]string, error) {
 	res := struct {
