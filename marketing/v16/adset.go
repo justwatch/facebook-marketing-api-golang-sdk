@@ -164,7 +164,7 @@ var AdsetFields = []string{
 	"time_based_ad_rotation_id_blocks", "time_based_ad_rotation_intervals",
 	"pacing_type", "promoted_object", "recommendations",
 	"source_adset", "status", "updated_time", "use_new_app_click",
-	"campaign{name,objective,effective_status}",
+	"campaign{name,objective,effective_status}", "dsa_beneficiary", "dsa_payor",
 }
 
 // Adset from https://developers.facebook.com/docs/marketing-api/reference/ad-campaign
@@ -202,6 +202,8 @@ type Adset struct {
 	Targeting                  *Targeting             `json:"targeting,omitempty"`
 	UpdatedTime                fb.Time                `json:"updated_time,omitempty"`
 	TargetingOptimizationTypes map[string]int32       `json:"targeting_optimization_types,omitempty"`
+	DSABeneficiary             string                 `json:"dsa_beneficiary,omitempty"`
+	DSAPayor                   string                 `json:"dsa_payor,omitempty"`
 }
 
 // FrequencyControlSpec controls the frequency of an adset.
