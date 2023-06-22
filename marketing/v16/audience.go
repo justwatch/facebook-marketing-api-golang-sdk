@@ -42,7 +42,7 @@ func (as *AudienceService) Create(ctx context.Context, act string, a CustomAudie
 }
 
 // CreateLookalike creates new lookalike
-func (as *AudienceService) CreateLookalike(ctx context.Context, adaccountID, orginAudienceID, customAudienceName string, lookalikeSpec *LookalikeSpec) error {
+func (as *AudienceService) CreateLookalike(ctx context.Context, adaccountID, orginAudienceID, customAudienceName string, lookalikeSpec *LookalikeSpec) (string, error) {
 
 	type createLookalikeRequest struct {
 		OriginAudienceID string         `json:"origin_audience_id"`
@@ -59,14 +59,14 @@ func (as *AudienceService) CreateLookalike(ctx context.Context, adaccountID, org
 		LookalikeSpec:    lookalikeSpec,
 	}, &res)
 	if err != nil {
-		return err
+		return "", err
 	} else if err = res.GetError(); err != nil {
-		return err
+		return "", err
 	} else if res.ID == "" {
-		return fmt.Errorf("creating lookalike audience failed")
+		return "", fmt.Errorf("creating lookalike audience failed")
 	}
 
-	return nil
+	return res.ID, nil
 }
 
 // Update updates an audience.
