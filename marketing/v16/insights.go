@@ -75,6 +75,7 @@ func (ir *InsightsRequest) GenerateReport(ctx context.Context, c chan<- Insight)
 		DateStop               string `json:"date_stop"`
 	}{}
 	ir.RouteBuilder.DefaultSummary(true)
+	ir.RouteBuilder.UnifiedAttributionSettings(true)
 	err := ir.c.PostJSON(ctx, ir.RouteBuilder.String(), nil, run)
 	if err != nil {
 		return 0, err
@@ -241,6 +242,19 @@ func (atv ActionTypeValue) GetValue(actionType string) float64 {
 	for _, a := range atv {
 		if a.ActionType == actionType {
 			value += a.Value
+		}
+	}
+
+	return value
+}
+
+// GetCustomConversion returns the custom conversions of the values with the given action type.
+func (atv ActionTypeValue) GetCustomConversion() float64 {
+	var value float64
+
+	for _, a := range atv {
+		if strings.Contains(a.ActionType, "offsite_conversion.custom") {
+			value = a.Value
 		}
 	}
 

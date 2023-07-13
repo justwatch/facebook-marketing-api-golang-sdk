@@ -181,6 +181,17 @@ func (rb *RouteBuilder) DefaultSummary(t bool) *RouteBuilder {
 	return rb
 }
 
+// UnifiedAttributionSettings sets unified_attribution_setting param or deletes it.
+func (rb *RouteBuilder) UnifiedAttributionSettings(t bool) *RouteBuilder {
+	if t {
+		rb.v.Set("use_unified_attribution_setting", "true")
+	} else {
+		rb.v.Del("use_unified_attribution_setting")
+	}
+
+	return rb
+}
+
 // Filtering sets filtering param or deletes it.
 func (rb *RouteBuilder) Filtering(f ...Filter) *RouteBuilder {
 	if len(f) > 0 {
