@@ -158,6 +158,7 @@ var Adcreativefields = []string{
 	"object_id",
 	"object_story_id",
 	"object_story_spec",
+	"asset_feed_spec",
 	"object_type",
 	"object_url",
 	"status",
@@ -242,6 +243,8 @@ type AdCreative struct {
 	ImageCrops json.RawMessage `json:"image_crops,omitempty"`
 	// The page id and the content to create a new unpublished page post specified using one of link_data, photo_data, video_data, text_data or template_data
 	ObjectStorySpec *ObjectStorySpec `json:"object_story_spec,omitempty"`
+	//
+	AssetFeedSpec *AssetFeedSpec `json:"asset_feed_spec,omitempty"`
 	// Use this field to customize the media for different Facebook placements.
 	// Currently you can use this field for customizing images only. The media
 	// specified here replaces the original media defined in the ad creative when
@@ -285,6 +288,34 @@ type ObjectStorySpec struct {
 	VideoData        *VideoData           `json:"video_data,omitempty"`
 	LinkData         *AdCreativeLinkData  `json:"link_data,omitempty"`
 	PhotoData        *AdCreativePhotoData `json:"photo_data,omitempty"`
+}
+
+type AssetFeedSpecImage struct {
+	Hash    string `json:"hash,omitempty"`
+	Url     string `json:"url,omitempty"`
+	UrlTags string `json:"url_tags,omitempty"`
+}
+
+type AssetFeedSpec struct {
+	Images            []AssetFeedSpecImage   `json:"images,omitempty"`
+	Bodies            []AssetText            `json:"bodies,omitempty"`
+	CallToActionTypes []string               `json:"call_to_action_types,omitempty"`
+	Descriptions      []AssetText            `json:"descriptions,omitempty"`
+	LinkUrls          []AssetFeedSpecLinkURL `json:"link_urls,omitempty"`
+	Titles            []AssetText            `json:"titles,omitempty"`
+	AdFormats         []string               `json:"ad_formats"`
+}
+
+type AssetFeedSpecLinkURL struct {
+	WebsiteUrl         string `json:"website_url,omitempty"`
+	UrlTags            string `json:"url_tags,omitempty"`
+	DisplayUrl         string `json:"display_url,omitempty"`
+	DeeplinkUrl        string `json:"deeplink_url,omitempty"`
+	CarouselSeeMoreUrl string `json:"carousel_see_more_url,omitempty"`
+}
+
+type AssetText struct {
+	Text string `json:"text,omitempty"`
 }
 
 // InteractiveComponentsSpec is mainly used for Video Poll Ads.
