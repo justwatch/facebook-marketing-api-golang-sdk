@@ -164,9 +164,9 @@ type Campaign struct {
 	Name                string   `json:"name,omitempty"`
 	Objective           string   `json:"objective,omitempty"`
 	SpendCap            uint64   `json:"spend_cap,omitempty,string"`
-	StartTime           fb.Time  `json:"start_time,omitempty"`
+	StartTime           *fb.Time `json:"start_time,omitempty"`
 	Status              string   `json:"status,omitempty"`
-	StopTime            fb.Time  `json:"stop_time,omitempty"`
-	UpdatedTime         fb.Time  `json:"updated_time,omitempty"`
+	StopTime            *fb.Time `json:"stop_time,omitempty"`
+	UpdatedTime         *fb.Time `json:"updated_time,omitempty"`
 	SpecialAdCategories []string `json:"special_ad_categories,omitempty"`
 }

@@ -358,7 +358,7 @@ type Comment struct {
 	CanLike                  bool            `json:"can_like,omitempty"`
 	CanReplyPrivately        bool            `json:"can_reply_privately,omitempty"`
 	CommentCount             int32           `json:"comment_count,omitempty"`
-	CreatedTime              fb.Time         `json:"created_time,omitempty"`
+	CreatedTime              *fb.Time        `json:"created_time,omitempty"`
 	From                     *User           `json:"from,omitempty"`
 	LikeCount                int32           `json:"like_count,omitempty"`
 	Message                  string          `json:"message,omitempty"`
