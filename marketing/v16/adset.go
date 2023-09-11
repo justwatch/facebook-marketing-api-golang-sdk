@@ -245,17 +245,26 @@ type Targeting struct {
 	FlexibleSpec            []FlexibleSpec `json:"flexible_spec,omitempty"`
 	Exclusions              *FlexibleSpec  `json:"exclusions,omitempty"`
 
-	DevicePlatforms             []string `json:"device_platforms,omitempty"`
-	ExcludedPublisherCategories []string `json:"excluded_publisher_categories,omitempty"`
-	Locales                     []int    `json:"locales,omitempty"`
-	TargetingOptimization       string   `json:"targeting_optimization,omitempty"`
-	UserDevice                  []string `json:"user_device,omitempty"`
-	UserOs                      []string `json:"user_os,omitempty"`
-	WirelessCarrier             []string `json:"wireless_carrier,omitempty"`
+	DevicePlatforms             []string                 `json:"device_platforms,omitempty"`
+	ExcludedPublisherCategories []string                 `json:"excluded_publisher_categories,omitempty"`
+	Locales                     []int                    `json:"locales,omitempty"`
+	TargetingOptimization       string                   `json:"targeting_optimization,omitempty"`
+	UserDevice                  []string                 `json:"user_device,omitempty"`
+	UserOs                      []string                 `json:"user_os,omitempty"`
+	WirelessCarrier             []string                 `json:"wireless_carrier,omitempty"`
+	TargetingRelaxationTypes    TargetingRelaxationTypes `json:"targeting_relaxation_types,omitempty"`
+}
+
+// Advantage custom audience and Advantage lookalike can be enabled or disabled.
+// if a value of 0 is passed, it will be disabled. If a value of 1 is passed, it will be enabled.
+// If no key/value pair is passed, it will be considered as enabled.
+// https://developers.facebook.com/docs/graph-api/changelog/version15.0/
+type TargetingRelaxationTypes struct {
+	CustomAudience int8 `json:"custom_audience"`
+	Lookalike      int8 `json:"lookalike"`
 }
 
 // FlexibleSpec is used for targeting
-
 type FlexibleSpec struct {
 	Interests            []IDContainer `json:"interests,omitempty"`
 	Behaviors            []IDContainer `json:"behaviors,omitempty"`
