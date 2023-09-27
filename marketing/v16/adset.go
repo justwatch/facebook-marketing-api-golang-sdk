@@ -151,7 +151,7 @@ func (as *AdsetListCall) Do(ctx context.Context) ([]Adset, error) {
 
 // AdsetFields is a selection of fields to be returned.
 var AdsetFields = []string{
-	"bid_amount", "attribution_spec", "bid_info",
+	"bid_amount", "bid_strategy", "attribution_spec", "bid_info",
 	"billing_event", "campaign_id", "created_time",
 	"daily_budget", "destination_type", "effective_status",
 	"daily_spend_cap", "daily_min_spend_target", "end_time",
