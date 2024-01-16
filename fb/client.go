@@ -62,14 +62,14 @@ func (c *Client) handleResponse(resp *http.Response, res interface{}, req []byte
 
 func (c *Client) handleError(err error, res *http.Response, req []byte) {
 	if err == nil {
-		_ = level.Warn(c.l).Log("msg", "received unexpected status code", "url", res.Request.URL.String(), "status", res.StatusCode, "method", res.Request.Method, "body", truncateString(string(req), errorStringMaxLen))
+		_ = level.Warn(c.l).Log("msg", "received unexpected status code", "url", res.Request.URL.String(), "status", res.StatusCode, "method", res.Request.Method, "body", string(req))
 
 		return
 	}
 
 	e, ok := err.(*Error)
 	if !ok {
-		_ = level.Warn(c.l).Log("msg", "received unexpected error", "url", res.Request.URL.String(), "status", res.StatusCode, "err", err, "type", fmt.Sprintf("%T", err), "method", res.Request.Method, "body", truncateString(string(req), errorStringMaxLen))
+		_ = level.Warn(c.l).Log("msg", "received unexpected error", "url", res.Request.URL.String(), "status", res.StatusCode, "err", err, "type", fmt.Sprintf("%T", err), "method", res.Request.Method, "body", string(req))
 
 		return
 	}
@@ -85,7 +85,7 @@ func (c *Client) handleError(err error, res *http.Response, req []byte) {
 		"error_user_msg", e.ErrorUserMsg,
 		"error_data", e.ErrorData,
 		"method", res.Request.Method,
-		"body", truncateString(string(req), errorStringMaxLen),
+		"body", string(req),
 	)
 }
 
