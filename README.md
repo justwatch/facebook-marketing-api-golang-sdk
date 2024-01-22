@@ -9,14 +9,6 @@ This go package provides a comprehensive list of methods for interacting with Fa
 
 ---
 
-![JustWatch logo](logo.png)
-
-## You enjoy working with the Facebook Marketing API? We are hiring! 
-
-Find out what open positions we have at the moment and why JustWatch is a great place to work at: https://www.justwatch.com/us/talent
-
----
-
 The SDK supports crud operations for the following entities:
 
 - ad_account
@@ -44,11 +36,11 @@ We assume you already have a Facebook Developer account and configured an `acces
 
 ```go
 import(
-	"github.com/justwatch/facebook-marketing-api-golang-sdk/marketing/v16"
+	"github.com/justwatch/facebook-marketing-api-golang-sdk/marketing/v18"
 )
 
 func main(){
-	fbService, _ := v16.New(l, accessToken, appSecret)
+	fbService, _ := v18.New(l, accessToken, appSecret)
 	
 	// [Code snippets from other example below go here]
 }
@@ -57,7 +49,7 @@ func main(){
 ### Create a campaign
 
 ```go
-c := v16.Campaign{
+c := v18.Campaign{
 	// Populate struct values
 }
 id, _ := fbService.Campaigns.Create(ctx, c)
@@ -117,7 +109,7 @@ report.Level("adset").
 			DatePreset("lifetime") // the time period for the report
 
 // pass a channel which gets populated with results
-ch := make(chan v16.Insight)
+ch := make(chan v18.Insight)
 nRecords,_ := report.GenerateReport(ctx,ch)
 
 //range over the channel to get Insight objects
