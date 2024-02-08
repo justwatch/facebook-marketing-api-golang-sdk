@@ -45,6 +45,11 @@ func (as *AdCreativeService) Create(ctx context.Context, a AdCreative) (string, 
 		return "", "", errors.New("cannot create adcreative without account id")
 	}
 
+	// The enroll_status parameter for Standard Enhancements is now required for eligible ad creation requests.
+	if a.DegreesOfFreedomSpec.CreativeFeaturesSpec.StandardEnhancements.EnrollStatus == "" {
+		a.DegreesOfFreedomSpec.CreativeFeaturesSpec.StandardEnhancements.EnrollStatus = "OPT_OUT"
+	}
+
 	res := struct {
 		fb.ID
 		fb.ErrorContainer
@@ -255,6 +260,8 @@ type AdCreative struct {
 	TemplateURLSpec json.RawMessage `json:"template_url_spec,omitempty"`
 	// Ad Labels that are associated with this creative
 	Adlabels []json.RawMessage `json:"adlabels,omitempty"`
+	// DegreesOfFreedomSpec Specifies the types of transformations that are enabled for the given creative. For more information, see Ad Creative Degrees Of Freedom Spec, Reference.
+	DegreesOfFreedomSpec *DegreesOfFreedomSpec `json:"degrees_of_freedom_spec,omitempty"`
 }
 
 type adCreativeContainer struct {
@@ -285,6 +292,14 @@ type ObjectStorySpec struct {
 	VideoData        *VideoData           `json:"video_data,omitempty"`
 	LinkData         *AdCreativeLinkData  `json:"link_data,omitempty"`
 	PhotoData        *AdCreativePhotoData `json:"photo_data,omitempty"`
+}
+
+type DegreesOfFreedomSpec struct {
+	CreativeFeaturesSpec struct {
+		StandardEnhancements struct {
+			EnrollStatus string `json:"enroll_status"`
+		} `json:"standard_enhancements"`
+	} `json:"creative_features_spec"`
 }
 
 // InteractiveComponentsSpec is mainly used for Video Poll Ads.
