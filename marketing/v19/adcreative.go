@@ -46,8 +46,14 @@ func (as *AdCreativeService) Create(ctx context.Context, a AdCreative) (string, 
 	}
 
 	// The enroll_status parameter for Standard Enhancements is now required for eligible ad creation requests.
-	if a.DegreesOfFreedomSpec.CreativeFeaturesSpec.StandardEnhancements.EnrollStatus == "" {
-		a.DegreesOfFreedomSpec.CreativeFeaturesSpec.StandardEnhancements.EnrollStatus = "OPT_OUT"
+	if a.DegreesOfFreedomSpec == nil || a.DegreesOfFreedomSpec.CreativeFeaturesSpec.StandardEnhancements.EnrollStatus == "" {
+		a.DegreesOfFreedomSpec = &DegreesOfFreedomSpec{
+			CreativeFeaturesSpec: CreativeFeaturesSpec{
+				StandardEnhancements: StandardEnhancements{
+					EnrollStatus: "OPT_OUT",
+				},
+			},
+		}
 	}
 
 	res := struct {
@@ -295,11 +301,13 @@ type ObjectStorySpec struct {
 }
 
 type DegreesOfFreedomSpec struct {
-	CreativeFeaturesSpec struct {
-		StandardEnhancements struct {
-			EnrollStatus string `json:"enroll_status"`
-		} `json:"standard_enhancements"`
-	} `json:"creative_features_spec"`
+	CreativeFeaturesSpec CreativeFeaturesSpec `json:"creative_features_spec"`
+}
+type StandardEnhancements struct {
+	EnrollStatus string `json:"enroll_status"`
+}
+type CreativeFeaturesSpec struct {
+	StandardEnhancements StandardEnhancements `json:"standard_enhancements"`
 }
 
 // InteractiveComponentsSpec is mainly used for Video Poll Ads.
