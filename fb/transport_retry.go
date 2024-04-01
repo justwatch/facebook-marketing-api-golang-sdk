@@ -2,6 +2,7 @@ package fb
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -37,9 +38,16 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 		if e != nil {
 			return e
 		} else if resp.StatusCode >= 500 {
+			bodyBytes, err := io.ReadAll(resp.Body)
+			var resultErr error
+			if err != nil {
+				resultErr = fmt.Errorf("unexpected status %s from facebook, attempt %d", resp.Status, attempt)
+			} else {
+				resultErr = fmt.Errorf("unexpected status %s from facebook, body: %s, attempt %d", resp.Status, string(bodyBytes), attempt)
+			}
 			resp.Body.Close()
 
-			return fmt.Errorf("unexpected status %s from facebook, attempt %d", resp.Status, attempt)
+			return resultErr
 		}
 
 		return nil
