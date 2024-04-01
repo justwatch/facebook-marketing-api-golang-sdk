@@ -38,9 +38,9 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 		if e != nil {
 			return e
 		} else if resp.StatusCode >= 500 {
-			bodyBytes, err := io.ReadAll(resp.Body)
+			bodyBytes, e := io.ReadAll(resp.Body)
 			var resultErr error
-			if err != nil {
+			if e != nil {
 				resultErr = fmt.Errorf("unexpected status %s from facebook, attempt %d", resp.Status, attempt)
 			} else {
 				resultErr = fmt.Errorf("unexpected status %s from facebook, body: %s, attempt %d", resp.Status, string(bodyBytes), attempt)
