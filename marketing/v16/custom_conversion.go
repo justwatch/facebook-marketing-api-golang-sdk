@@ -2,8 +2,13 @@ package v16
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -32,6 +37,46 @@ func (ccs *CustomConversionService) Create(ctx context.Context, businessID strin
 	}
 
 	return res.ID, nil
+}
+
+func (css *CustomConversionService) PushServerEvents(ctx context.Context, pixel Pixel, serverEvents ServerEvents, testEventCode, metaConversionAPIAccessToken string) error {
+	// Prepare request body (form encoded)
+	bodyForm := url.Values{}
+	bodyForm.Add("access_token", metaConversionAPIAccessToken)
+
+	// you can send an array of data
+	jsonData, err := json.Marshal(serverEvents)
+	if err != nil {
+		return fmt.Errorf("could not json marshal conversion-event: %w", err)
+	}
+	bodyForm.Add("data", string(jsonData))
+
+	if testEventCode != "" {
+		bodyForm.Add("test_event_code", testEventCode)
+	}
+
+	// Do request
+	conversionAPIRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("https://graph.facebook.com/%s/%s/events", Version, pixel.ID), strings.NewReader(bodyForm.Encode()))
+	if err != nil {
+		return fmt.Errorf("could not create request: %w", err)
+	}
+
+	resp, err := css.c.Do(conversionAPIRequest)
+	if err != nil {
+		return fmt.Errorf("could not do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("status code not 200: %d: %w", resp.StatusCode, err)
+		}
+
+		return fmt.Errorf("status code not 200: %d. %q", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 // List returns all custom conversions for the specified account.
@@ -89,6 +134,39 @@ type CustomConversion struct {
 	OfflineConversionDataSet interface{}  `json:"offline_conversion_data_set"`
 	EventSourceType          string       `json:"event_source_type"`
 	RetentionDays            int          `json:"retention_days"`
+}
+
+type ServerEvents []ServerEvent
+
+// ServerEvent entity https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event
+type ServerEvent struct {
+	EventName      string              `json:"event_name"`
+	EventID        string              `json:"event_id"`
+	EventTime      int64               `json:"event_time"`
+	EventSourceURL string              `json:"event_source_url"`
+	ActionSource   string              `json:"action_source"`
+	UserData       CustomerInformation `json:"user_data,omitempty"`
+	Contents       []Contents          `json:"contents,omitempty"`
+
+	// CustomData might represent your cutom struct with any fields.
+	CustomData interface{} `json:"custom_data,omitempty"`
+}
+
+// Contents entity is a part of standart parameters. A list of JSON objects that contain the product IDs associated with the event plus information about the products
+type Contents struct {
+	ID               string `json:"id,omitempty"`
+	Quantity         int    `json:"quantity,omitempty"`
+	DeliveryCategory string `json:"delivery_category,omitempty"`
+}
+
+// CutomerInfromation entity https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/customer-information-parameters
+type CustomerInformation struct {
+	Email           []string `json:"em,omitempty"`
+	PhoneNumber     []string `json:"ph,omitempty"`
+	ClientIPAddress string   `json:"client_ip_address,omitempty"`
+	ClientUserAgent string   `json:"client_user_agent,omitempty"`
+	Fbc             string   `json:"fbc,omitempty"`
+	Fbp             string   `json:"fbp,omitempty"`
 }
 
 // DataSource is part of a CustomConversion.
