@@ -5,10 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -39,7 +36,7 @@ func (ccs *CustomConversionService) Create(ctx context.Context, businessID strin
 	return res.ID, nil
 }
 
-func (css *CustomConversionService) PushServerEvents(ctx context.Context, pixel Pixel, serverEvents ServerEvents, testEventCode, metaConversionAPIAccessToken string) error {
+func (css *CustomConversionService) PushServerEvents(ctx context.Context, pixel Pixel, serverEvents ServerEvents, testEventCode, metaConversionAPIAccessToken string) (string, error) {
 	// Prepare request body (form encoded)
 	bodyForm := url.Values{}
 	bodyForm.Add("access_token", metaConversionAPIAccessToken)
@@ -47,7 +44,7 @@ func (css *CustomConversionService) PushServerEvents(ctx context.Context, pixel 
 	// you can send an array of data
 	jsonData, err := json.Marshal(serverEvents)
 	if err != nil {
-		return fmt.Errorf("could not json marshal conversion-event: %w", err)
+		return "", fmt.Errorf("could not json marshal conversion-event: %w", err)
 	}
 	bodyForm.Add("data", string(jsonData))
 
@@ -55,28 +52,17 @@ func (css *CustomConversionService) PushServerEvents(ctx context.Context, pixel 
 		bodyForm.Add("test_event_code", testEventCode)
 	}
 
-	// Do request
-	conversionAPIRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("https://graph.facebook.com/%s/%s/events", Version, pixel.ID), strings.NewReader(bodyForm.Encode()))
+	res := fb.MinimalResponse{}
+	err = css.c.PostJSON(ctx, fb.NewRoute(Version, "/%s/events", pixel.ID).String(), bodyForm, &res)
 	if err != nil {
-		return fmt.Errorf("could not create request: %w", err)
+		return "", err
+	} else if err = res.GetError(); err != nil {
+		return "", err
+	} else if res.ID == "" {
+		return "", fmt.Errorf("creating custom conversion failed")
 	}
 
-	resp, err := css.c.Do(conversionAPIRequest)
-	if err != nil {
-		return fmt.Errorf("could not do request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("status code not 200: %d: %w", resp.StatusCode, err)
-		}
-
-		return fmt.Errorf("status code not 200: %d. %q", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return "", nil
 }
 
 // List returns all custom conversions for the specified account.
