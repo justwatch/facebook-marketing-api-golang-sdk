@@ -17,10 +17,6 @@ import (
 	"github.com/go-kit/kit/log/level"
 )
 
-const (
-	errorStringMaxLen = 50
-)
-
 // Client holds an http.Client and provides additional functionality.
 type Client struct {
 	l log.Logger
@@ -188,6 +184,25 @@ func (c *Client) PostJSON(ctx context.Context, url string, req, res interface{})
 	}
 
 	return c.handleResponse(resp, res, b)
+}
+
+// Send a Post request encoded as a form.
+func (c *Client) PostForm(ctx context.Context, endpointUrl string, formBody url.Values, res interface{}) error {
+	var encodedBody io.Reader = strings.NewReader(formBody.Encode())
+	var debugBuf *bytes.Buffer = &bytes.Buffer{}
+	encodedBody = io.TeeReader(encodedBody, debugBuf)
+	apiRequest, err := http.NewRequest(http.MethodPost, endpointUrl, encodedBody)
+	if err != nil {
+		return fmt.Errorf("cannot prepare request request: %w", err)
+	}
+
+	resp, err := c.Client.Do(apiRequest.WithContext(ctx))
+	if err != nil {
+		fmt.Printf("cannot execute the request: %s", err.Error())
+		return err
+	}
+
+	return c.handleResponse(resp, res, debugBuf.Bytes())
 }
 
 // DeleteJSON sends a DELETE request to url with a body and marshals the response to res.

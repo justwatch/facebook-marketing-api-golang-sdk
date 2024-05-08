@@ -3,3 +3,4 @@ gitstats
 .DS_Store
 .vscode
 .idea
+main.go
