@@ -2,10 +2,13 @@ package v16
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
+	"github.com/justwatch/facebook-marketing-api-golang-sdk/marketing/v16/types"
 )
 
 // CustomConversionService contains all methods for working on custom conversions.
@@ -32,6 +35,35 @@ func (ccs *CustomConversionService) Create(ctx context.Context, businessID strin
 	}
 
 	return res.ID, nil
+}
+
+func (css *CustomConversionService) PushServerEvents(ctx context.Context, pixel Pixel, serverEvents types.ServerEvents, testEventCode string) (string, error) {
+	// prepare form body
+	formBody := url.Values{}
+	jsonData, err := json.Marshal(serverEvents)
+	if err != nil {
+		return "", fmt.Errorf("could not json marshal conversion-event: %w", err)
+	}
+	formBody.Add("data", string(jsonData))
+
+	// add test code if test run
+	if testEventCode != "" {
+		formBody.Add("test_event_code", testEventCode)
+	}
+
+	res := fb.MinimalResponse{}
+	err = css.c.PostForm(ctx, fb.NewRoute(Version, "/%s/events", pixel.ID).String(), formBody, &res)
+	if err != nil {
+		fmt.Printf("cannot post form: %s", err)
+		return "", err
+	} else if err = res.GetError(); err != nil {
+		return "", err
+	} else if res.ID == "" {
+		fmt.Print("successfully sent test server events")
+		return "", nil
+	}
+
+	return "", nil
 }
 
 // List returns all custom conversions for the specified account.
