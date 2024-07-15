@@ -69,7 +69,7 @@ func (as *AudienceService) CreateLookalike(ctx context.Context, adaccountID, org
 	return res.ID, nil
 }
 
-// GetDeliveryEstimate returns the delivery_estimate mau for a given adset.
+// GetAudienceSize returns the upper bound of the audience size.
 func (as *AudienceService) GetAudienceSize(ctx context.Context, accountID string, t *Targeting) (uint64, error) {
 	r := fb.NewRoute(Version, "/act_%s/reachestimate", accountID)
 
