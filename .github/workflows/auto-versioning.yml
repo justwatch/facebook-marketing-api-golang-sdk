@@ -1,0 +1,46 @@
+name: Release Version Update
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "::set-output name=tag::$latest_tag"
+
+      - name: Bump version and push tag
+        id: bump_version
+        run: |
+          latest_tag=${{ steps.get_latest_tag.outputs.tag }}
+          major=$(echo $latest_tag | cut -d. -f1)
+          minor=$(echo $latest_tag | cut -d. -f2)
+          patch=$(echo $latest_tag | cut -d. -f3)
+          new_minor=$((minor + 1))
+          new_tag="${major}.${new_minor}.0"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a $new_tag -m "Auto-increment version to $new_tag"
+          git push origin $new_tag
+          echo "::set-output name=new_tag::$new_tag"
+
+      - name: Prepare Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump_version.outputs.new_tag }}
+          name: Release ${{ steps.bump_version.outputs.new_tag }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
