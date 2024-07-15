@@ -69,6 +69,27 @@ func (as *AudienceService) CreateLookalike(ctx context.Context, adaccountID, org
 	return res.ID, nil
 }
 
+// GetDeliveryEstimate returns the delivery_estimate mau for a given adset.
+func (as *AudienceService) GetAudienceSize(ctx context.Context, accountID string, t *Targeting) (uint64, error) {
+	r := fb.NewRoute(Version, "/act_%s/reachestimate", accountID)
+
+	if t != nil {
+		r.TargetingSpec(t)
+	}
+
+	var reachEstimate ReachEstimate
+	err := as.c.GetJSON(ctx, r.String(), &reachEstimate)
+	if err != nil {
+		return 0, err
+	}
+
+	if !reachEstimate.Data.EstimateReady {
+		return 0, nil
+	}
+
+	return uint64(reachEstimate.Data.UpperBound), nil
+}
+
 // Update updates an audience.
 func (as *AudienceService) Update(ctx context.Context, a CustomAudience) error {
 	if a.ID == "" {
@@ -414,4 +435,16 @@ type LookalikeOrigion struct {
 // Adaccounts https://developers.facebook.com/docs/marketing-api/reference/custom-audience/adaccounts/
 type Adaccounts struct {
 	Data []json.Number `json:"data,omitempty"`
+}
+
+// Data is a single reach estimate.
+type ReachEstimateData struct {
+	LowerBound    int64 `json:"users_lower_bound"`
+	UpperBound    int64 `json:"users_upper_bound"`
+	EstimateReady bool  `json:"estimate_ready"`
+}
+
+// ReachEstimate is a collection of Data structs.
+type ReachEstimate struct {
+	Data ReachEstimateData `json:"data"`
 }
