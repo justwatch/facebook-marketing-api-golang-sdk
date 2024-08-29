@@ -15,6 +15,11 @@ import (
 // BatchMaxIDsSequence we upload.
 const BatchMaxIDsSequence = 10000
 
+type AudienceSize struct {
+	UpperBound uint64 `json:"upper_bound"`
+	LowerBound uint64 `json:"lower_bound"`
+}
+
 // AudienceService contains all methods for working on audiences.
 type AudienceService struct {
 	c *fb.Client
@@ -41,7 +46,7 @@ func (as *AudienceService) Create(ctx context.Context, act string, a CustomAudie
 	return res.ID, nil
 }
 
-func (as AudienceService) GetAudienceSize(ctx context.Context, accountID string, t *Targeting) (uint64, error) {
+func (as AudienceService) GetAudienceSize(ctx context.Context, accountID string, t *Targeting) (AudienceSize, error) {
 	r := fb.NewRoute(Version, "/act_%s/reachestimate", accountID)
 
 	if t != nil {
@@ -51,14 +56,17 @@ func (as AudienceService) GetAudienceSize(ctx context.Context, accountID string,
 	var reachEstimate ReachEstimate
 	err := as.c.GetJSON(ctx, r.String(), &reachEstimate)
 	if err != nil {
-		return 0, err
+		return AudienceSize{}, err
 	}
 
 	if !reachEstimate.Data.EstimateReady {
-		return 0, nil
+		return AudienceSize{}, nil
 	}
 
-	return uint64(reachEstimate.Data.UpperBound), nil
+	return AudienceSize{
+		UpperBound: reachEstimate.Data.UpperBound,
+		LowerBound: reachEstimate.Data.LowerBound,
+	}, nil
 }
 
 // CreateLookalike creates new lookalike
@@ -438,9 +446,9 @@ type Adaccounts struct {
 
 // Data is a single reach estimate.
 type ReachEstimateData struct {
-	LowerBound    int64 `json:"users_lower_bound"`
-	UpperBound    int64 `json:"users_upper_bound"`
-	EstimateReady bool  `json:"estimate_ready"`
+	LowerBound    uint64 `json:"users_lower_bound"`
+	UpperBound    uint64 `json:"users_upper_bound"`
+	EstimateReady bool   `json:"estimate_ready"`
 }
 
 // ReachEstimate is a collection of Data structs.
