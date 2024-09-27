@@ -292,6 +292,21 @@ func (ac AdCreative) GetLandingPageURL() string {
 	return ""
 }
 
+// GetLinkCaption returns the link caption page URL of the creative.
+func (ac AdCreative) GetLinkCaption() string {
+	if ac.ObjectStorySpec == nil {
+		return ""
+	}
+
+	if ac.ObjectStorySpec.LinkData != nil {
+		return ac.ObjectStorySpec.LinkData.CallToAction.Value.LinkCaption
+	} else if ac.ObjectStorySpec.VideoData != nil && ac.ObjectStorySpec.VideoData.CallToAction != nil && ac.ObjectStorySpec.VideoData.CallToAction.Value != nil {
+		return ac.ObjectStorySpec.VideoData.CallToAction.Value.LinkCaption
+	}
+
+	return ""
+}
+
 // ObjectStorySpec contains the media of a creative.
 type ObjectStorySpec struct {
 	PageID           string               `json:"page_id,omitempty"`
