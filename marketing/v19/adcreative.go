@@ -166,6 +166,7 @@ var Adcreativefields = []string{
 	"link_og_id",
 	"link_url",
 	"name",
+	"interactive_components_spec",
 	"object_id",
 	"object_story_id",
 	"object_story_spec",
