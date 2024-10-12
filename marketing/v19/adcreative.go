@@ -298,7 +298,7 @@ func (ac AdCreative) GetLinkCaption() string {
 		return ""
 	}
 
-	if ac.ObjectStorySpec.LinkData != nil {
+	if ac.ObjectStorySpec.LinkData != nil && ac.ObjectStorySpec.LinkData.CallToAction != nil && ac.ObjectStorySpec.LinkData.CallToAction.Value != nil {
 		return ac.ObjectStorySpec.LinkData.CallToAction.Value.LinkCaption
 	} else if ac.ObjectStorySpec.VideoData != nil && ac.ObjectStorySpec.VideoData.CallToAction != nil && ac.ObjectStorySpec.VideoData.CallToAction.Value != nil {
 		return ac.ObjectStorySpec.VideoData.CallToAction.Value.LinkCaption
