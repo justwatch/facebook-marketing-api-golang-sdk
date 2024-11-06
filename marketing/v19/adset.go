@@ -112,6 +112,18 @@ func (as *AdsetService) List(account string, fields []string) *AdsetListCall {
 	}
 }
 
+// ListWithEffectiveStatus returns a list of adsets for an account with a specific effective status.
+func (as *AdsetService) ListWithEffectiveStatus(account string, status string, fields []string) *AdsetListCall {
+	if len(fields) == 0 {
+		fields = AdsetFields
+	}
+
+	return &AdsetListCall{
+		RouteBuilder: fb.NewRoute(Version, "/act_%s/adsets", account).Limit(adsetListLimit).Fields(fields...).EffectiveStatus(status),
+		c:            as.c,
+	}
+}
+
 // ListOfCampaign returns an adsetlistcall for listing the adsets of a campaign id.
 func (as *AdsetService) ListOfCampaign(campaignID string, fields []string) *AdsetListCall {
 	if len(fields) == 0 {
