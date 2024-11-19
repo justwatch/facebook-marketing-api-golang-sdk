@@ -238,7 +238,7 @@ func (as *AudienceService) ListCustom(ctx context.Context, act string) ([]Custom
 	res := []CustomAudience{}
 	route := fb.NewRoute(Version, "/act_%s/customaudiences", act).
 		Limit(250).
-		Fields("id", "name", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts", "lookalike_spec") // , "rule")
+		Fields("id", "name", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts", "lookalike_spec", "rule")
 	err := as.c.GetList(ctx, route.String(), &res)
 	if err != nil {
 		return nil, err
