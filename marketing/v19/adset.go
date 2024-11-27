@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
 
 const (
-	adsetListLimit = 50
+	adsetListLimit          = 50
+	asyncBatchCheckInterval = 5 * time.Second
 )
 
 // AdsetService is used for working with adsets.
@@ -98,6 +100,63 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	}
 
 	return res.UpdatedTime, nil
+}
+
+// CopyAsync copies an adset using async batch.
+func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAdsetAsyncBatchResult, error) {
+	if id == "" {
+		return nil, errors.New("cannot copy adset without id")
+	}
+
+	res := &fb.AsyncBatchCreateResponse{}
+
+	req := &fb.AsyncBatchCreateRequest{
+		AsyncBatch: []fb.AsyncBatchOperation{
+			{
+				Method:      "POST",
+				RelativeURL: fmt.Sprintf("%s/copies", id),
+				Name:        fmt.Sprintf("%s_copy", id),
+				Body:        "deep_copy=true",
+			},
+		},
+	}
+
+	err := as.c.PostJSON(ctx, fb.NewRoute(Version, "/").String(), req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	asyncSessionID := res.AsyncSessions[0].ID
+
+	var result *fb.CopiedAdsetAsyncBatchResult
+
+	for {
+		asyncBatchStatus := &fb.AsyncBatch{}
+
+		err = as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", asyncSessionID).
+			Fields("result", "status", "error_code", "exception").
+			String(), asyncBatchStatus)
+		if err != nil {
+			return nil, err
+		}
+
+		if asyncBatchStatus.Status == "COMPLETED" {
+			err = json.Unmarshal([]byte(asyncBatchStatus.Result), &result)
+			if err != nil {
+				return nil, fmt.Errorf("could not unmarshal result: %w", err)
+			}
+
+			break
+		}
+
+		if asyncBatchStatus.Status == "FAILED" {
+			return nil, fmt.Errorf("async batch failed with error code %d: %s", asyncBatchStatus.ErrorCode, asyncBatchStatus.Exception)
+		}
+
+		time.Sleep(asyncBatchCheckInterval)
+	}
+
+	return result, nil
 }
 
 // List returns a list of adsets for an account.

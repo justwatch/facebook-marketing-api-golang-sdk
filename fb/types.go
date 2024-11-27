@@ -136,3 +136,49 @@ type SummaryContainer struct {
 		TotalCount uint64 `json:"total_count"`
 	} `json:"summary"`
 }
+
+type AsyncSession struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type AsyncBatchCreateResponse struct {
+	AsyncSessions []AsyncSession `json:"async_sessions"`
+}
+
+type AsyncBatchOperation struct {
+	Method      string `json:"method"`
+	RelativeURL string `json:"relative_url"`
+	Name        string `json:"name"`
+	Body        string `json:"body"`
+}
+
+type AsyncBatchCreateRequest struct {
+	AsyncBatch []AsyncBatchOperation `json:"asyncbatch"`
+}
+
+type AsyncBatch struct {
+	Result           string `json:"result"`
+	Status           string `json:"status"`
+	CompleteTime     string `json:"complete_time"`
+	ErrorCode        int    `json:"error_code"`
+	ID               string `json:"id"`
+	Method           string `json:"method"`
+	Name             string `json:"name"`
+	PercentCompleted int    `json:"percent_completed"`
+	PlatformVersion  string `json:"platform_version"`
+	StartTime        string `json:"start_time"`
+	URI              string `json:"uri"`
+	Exception        string `json:"exception"`
+}
+
+type AdObjectID struct {
+	AdObjectType string `json:"ad_object_type"`
+	SourceID     string `json:"source_id"`
+	CopiedID     string `json:"copied_id"`
+}
+
+type CopiedAdsetAsyncBatchResult struct {
+	CopiedAdSetID string       `json:"copied_adset_id"`
+	AdObjectIDs   []AdObjectID `json:"ad_object_ids"`
+}
