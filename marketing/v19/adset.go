@@ -102,6 +102,20 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	return res.UpdatedTime, nil
 }
 
+func (as *AdsetService) Delete(ctx context.Context, id string) error {
+	res := &fb.MinimalResponse{}
+	err := as.c.Delete(ctx, fb.NewRoute(Version, "/%s", id).String())
+	if err != nil {
+		return err
+	} else if err = res.GetError(); err != nil {
+		return err
+	} else if !res.Success {
+		return fmt.Errorf("deleting the adset failed")
+	}
+
+	return nil
+}
+
 // CopyAsync copies an adset using async batch.
 func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAdsetAsyncBatchResult, error) {
 	if id == "" {
