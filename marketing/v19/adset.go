@@ -102,6 +102,7 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	return res.UpdatedTime, nil
 }
 
+// Delete deletes an adset.
 func (as *AdsetService) Delete(ctx context.Context, id string) error {
 	res := &fb.MinimalResponse{}
 	err := as.c.DeleteJSON(ctx, fb.NewRoute(Version, "/%s", id).String(), nil, res)
