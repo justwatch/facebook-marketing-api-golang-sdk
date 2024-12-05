@@ -141,6 +141,10 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 		return nil, err
 	}
 
+	if len(res.AsyncSessions) == 0 {
+		return nil, errors.New("no async sessions returned")
+	}
+
 	asyncSessionID := res.AsyncSessions[0].ID
 
 	var result *fb.CopiedAdsetAsyncBatchResult

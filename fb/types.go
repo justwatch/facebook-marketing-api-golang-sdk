@@ -158,18 +158,10 @@ type AsyncBatchCreateRequest struct {
 }
 
 type AsyncBatch struct {
-	Result           string `json:"result"`
-	Status           string `json:"status"`
-	CompleteTime     string `json:"complete_time"`
-	ErrorCode        int    `json:"error_code"`
-	ID               string `json:"id"`
-	Method           string `json:"method"`
-	Name             string `json:"name"`
-	PercentCompleted int    `json:"percent_completed"`
-	PlatformVersion  string `json:"platform_version"`
-	StartTime        string `json:"start_time"`
-	URI              string `json:"uri"`
-	Exception        string `json:"exception"`
+	Result    string `json:"result"`
+	Status    string `json:"status"`
+	ErrorCode int    `json:"error_code"`
+	Exception string `json:"exception"`
 }
 
 type AdObjectID struct {
