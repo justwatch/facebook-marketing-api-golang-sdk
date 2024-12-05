@@ -104,7 +104,7 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 
 func (as *AdsetService) Delete(ctx context.Context, id string) error {
 	res := &fb.MinimalResponse{}
-	err := as.c.Delete(ctx, fb.NewRoute(Version, "/%s", id).String())
+	err := as.c.DeleteJSON(ctx, fb.NewRoute(Version, "/%s", id).String(), nil, res)
 	if err != nil {
 		return err
 	} else if err = res.GetError(); err != nil {
