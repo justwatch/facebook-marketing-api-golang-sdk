@@ -381,3 +381,41 @@ func (c *Client) UploadFile(ctx context.Context, url, name string, r io.Reader, 
 		return c.handleResponse(resp, res, nil)
 	}, backoff.WithContext(bo, ctx))
 }
+
+func (c *Client) PostBatch(ctx context.Context, base_url string, batch []BatchRequest) ([]BatchResponse, error) {
+	batchJSONBytes, err := json.Marshal(batch)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling batch request: %w", err)
+	}
+
+	batchJSONString := string(batchJSONBytes)
+
+	batchPath := fmt.Sprintf("%s?batch=%s", base_url, batchJSONString)
+
+	req, err := http.NewRequest(http.MethodGet, batchPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading batch response: %w", err)
+	}
+
+	batchResponses := make([]BatchResponse, 0, len(batch))
+
+	err = json.Unmarshal(body, &batchResponses)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshaling batch response: %w", err)
+	}
+
+	return batchResponses, nil
+}

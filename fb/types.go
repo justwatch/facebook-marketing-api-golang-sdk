@@ -3,6 +3,7 @@ package fb
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -173,4 +174,49 @@ type AdObjectID struct {
 type CopiedAdsetAsyncBatchResult struct {
 	CopiedAdSetID string       `json:"copied_adset_id"`
 	AdObjectIDs   []AdObjectID `json:"ad_object_ids"`
+}
+
+type BatchRequest struct {
+	Method string     `json:"method"`
+	Path   string     `json:"relative_url"`
+	Body   url.Values `json:"body"`
+}
+
+func (br BatchRequest) MarshalJSON() ([]byte, error) {
+	type Alias BatchRequest
+
+	return json.Marshal(&struct {
+		Body string `json:"body"`
+		*Alias
+	}{
+		Body:  br.Body.Encode(),
+		Alias: (*Alias)(&br),
+	})
+}
+
+type BatchResponse struct {
+	Code int `json:"code"`
+	Body any `json:"body"`
+}
+
+func (br *BatchResponse) UnmarshalJSON(data []byte) error {
+	temp := struct {
+		Code int    `json:"code"`
+		Body string `json:"body"`
+	}{}
+
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	var body any
+
+	if err := json.Unmarshal([]byte(temp.Body), &body); err != nil {
+		return err
+	}
+
+	br.Code = temp.Code
+	br.Body = body
+
+	return nil
 }
