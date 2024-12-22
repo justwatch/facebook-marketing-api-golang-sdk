@@ -392,7 +392,7 @@ func (c *Client) PostBatch(ctx context.Context, base_url string, batch []BatchRe
 
 	batchPath := fmt.Sprintf("%s?batch=%s", base_url, batchJSONString)
 
-	req, err := http.NewRequest(http.MethodGet, batchPath, nil)
+	req, err := http.NewRequest(http.MethodPost, batchPath, nil)
 	if err != nil {
 		return nil, err
 	}
