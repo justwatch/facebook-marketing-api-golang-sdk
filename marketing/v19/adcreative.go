@@ -176,6 +176,7 @@ var Adcreativefields = []string{
 	"thumbnail_url",
 	"title",
 	"video_id",
+	"source_instagram_media_id",
 }
 
 // AdCreative https://developers.facebook.com/docs/marketing-api/reference/ad-creative
@@ -203,6 +204,12 @@ type AdCreative struct {
 	ImageURL string `json:"image_url,omitempty"`
 	// Instagram actor ID
 	InstagramActorID string `json:"instagram_actor_id,omitempty"`
+	// IG User ID
+	InstagramUserID string `json:"instagram_user_id,omitempty"`
+	// The ID of an Instagram media object for creating ads.
+	SourceInstagramMediaID string `json:"source_instagram_media_id,omitempty"`
+	// CallToAction
+	CallToAction *AdCreativeLinkDataCallToAction `json:"call_to_action,omitempty"`
 	// Instagram permalink
 	InstagramPermalinkURL string `json:"instagram_permalink_url,omitempty"`
 	// The ID of an Instagram post for creating ads.

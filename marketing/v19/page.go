@@ -3,6 +3,7 @@ package v19
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -35,11 +36,16 @@ func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageI
 	}
 
 	fpiga := struct {
+		// Entity in the GraphAPI: IGUser.
+		ConnectedPageBackedInstagramAccount struct {
+			ID string `json:"id"`
+		} `json:"connected_page_backed_instagram_account"`
+		// Entity in the GraphAPI: InstagramUser
 		PageBackedInstagramAccounts struct {
 			Data []InstagramActor `json:"data"`
 		} `json:"page_backed_instagram_accounts"`
 	}{}
-	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("page_backed_instagram_accounts{id,username}").String(), &fpiga)
+	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("connected_page_backed_instagram_account{id},page_backed_instagram_accounts{id,username}").String(), &fpiga)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +99,31 @@ func (ps *PageService) GetInstagramActors(ctx context.Context, businessID string
 	}
 
 	return res, nil
+}
+
+func (aas *PageService) ListIGUsers(ctx context.Context) ([]IGUser, error) {
+	res := []IGUser{}
+	rb := fb.NewRoute(Version, "/me/accounts").Limit(1000).Fields("id", "name", "instagram_business_account", "connected_instagram_account")
+	err := aas.c.GetList(ctx, rb.String(), &res)
+	if err != nil {
+		return nil, err
+	}
+	res = slices.DeleteFunc(res, func(i IGUser) bool {
+		return i.InstagramBusinessAccount.ID == "" && i.ConnectedInstagramAccount.ID == ""
+	})
+
+	return res, nil
+}
+
+type IGUser struct {
+	Name                     string `json:"name"`
+	InstagramBusinessAccount struct {
+		ID string `json:"id"`
+	} `json:"instagram_business_account"`
+	ConnectedInstagramAccount struct {
+		ID string `json:"id"`
+	} `json:"connected_instagram_account"`
+	ID string `json:"id"`
 }
 
 // Get returns a single page.

@@ -17,6 +17,29 @@ type PostService struct {
 	*fb.StatsContainer
 }
 
+type postID struct {
+	ID   string `json:"id"`
+	From struct {
+		ID string `json:"id"`
+	} `json:"from"`
+}
+
+// Get postID from image/video/carousel post
+func (ps *PostService) GetPostID(ctx context.Context, pID string) (*string, error) {
+	res := &postID{}
+	err := ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pID).Fields("from", "id").String(), res)
+	if err != nil {
+		if fb.IsNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	id := res.From.ID + "_" + res.ID
+	return &id, nil
+}
+
 // Get returns a single post.
 func (ps *PostService) Get(ctx context.Context, id string) (*Post, error) {
 	res := &Post{}
