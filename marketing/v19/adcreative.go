@@ -281,7 +281,7 @@ func (ac AdCreative) GetLandingPageURL() string {
 // ObjectStorySpec contains the media of a creative.
 type ObjectStorySpec struct {
 	PageID           string               `json:"page_id,omitempty"`
-	InstagramUserID string               `json:"instagram_actor_id,omitempty"`
+	InstagramActorID string               `json:"instagram_actor_id,omitempty"`
 	VideoData        *VideoData           `json:"video_data,omitempty"`
 	LinkData         *AdCreativeLinkData  `json:"link_data,omitempty"`
 	PhotoData        *AdCreativePhotoData `json:"photo_data,omitempty"`
