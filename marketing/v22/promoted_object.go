@@ -1,4 +1,4 @@
-package v19
+package v22
 
 // PromotedObject contains the id of a promoted page.
 type PromotedObject struct {

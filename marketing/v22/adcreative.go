@@ -45,6 +45,17 @@ func (as *AdCreativeService) Create(ctx context.Context, a AdCreative) (string, 
 		return "", "", errors.New("cannot create adcreative without account id")
 	}
 
+	// The enroll_status parameter for Standard Enhancements is now required for eligible ad creation requests.
+	if a.DegreesOfFreedomSpec == nil || a.DegreesOfFreedomSpec.CreativeFeaturesSpec.StandardEnhancements.EnrollStatus == "" {
+		a.DegreesOfFreedomSpec = &DegreesOfFreedomSpec{
+			CreativeFeaturesSpec: &CreativeFeaturesSpec{
+				StandardEnhancements: StandardEnhancements{
+					EnrollStatus: "OPT_OUT",
+				},
+			},
+		}
+	}
+
 	res := struct {
 		fb.ID
 		fb.ErrorContainer
@@ -161,6 +172,7 @@ var Adcreativefields = []string{
 	"instagram_user_id",
 	"instagram_permalink_url",
 	"source_instagram_media_id",
+	"instagram_story_id",
 	"link_og_id",
 	"link_url",
 	"name",
@@ -200,6 +212,8 @@ type AdCreative struct {
 	ImageHash string `json:"image_hash,omitempty"`
 	// A URL for the image for this creative. We save the image at this URL to the ad account's image library. If provided do not include image_hash.
 	ImageURL string `json:"image_url,omitempty"`
+	// Instagram actor ID
+	InstagramActorID string `json:"instagram_actor_id,omitempty"`
 	// IG User ID
 	InstagramUserID string `json:"instagram_user_id,omitempty"`
 	// The ID of an Instagram media object for creating ads.
@@ -208,6 +222,8 @@ type AdCreative struct {
 	CallToAction *AdCreativeLinkDataCallToAction `json:"call_to_action,omitempty"`
 	// Instagram permalink
 	InstagramPermalinkURL string `json:"instagram_permalink_url,omitempty"`
+	// The ID of an Instagram post for creating ads.
+	InstagramStoryID string `json:"instagram_story_id,omitempty"`
 	// Used for creating video polls
 	InteractiveComponentsSpec *InteractiveComponentsSpec `json:"interactive_components_spec,omitempty"`
 	// The Open Graph (OG) ID for the link in this creative if the landing page has OG tags
@@ -326,26 +342,18 @@ type EnrollStatus struct {
 	EnrollStatus string `json:"enroll_status"` // OPT_IN or OPT_OUT
 }
 
-// https://developers.facebook.com/docs/marketing-api/creative/advantage-creative/get-started
-type CreativeFeaturesSpec struct {
-	InlineComment              *EnrollStatus `json:"inline_comment,omitempty"`                // Opt-in if you want the most relevant comment to be displayed below your ad on Facebook and Instagram.
-	ImageTemplate              *EnrollStatus `json:"image_template,omitempty"`                // Opt-in if you want overlays added that show text you have provided along with your selected ad creative when it is likely to improve performance. This feature is generated with AI.
-	ImageTouchups              *EnrollStatus `json:"image_touchups,omitempty"`                // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to image ads.
-	VideoAutoCrop              *EnrollStatus `json:"video_auto_crop,omitempty"`               // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to video ads.
-	ImageBrightnessAndContrast *EnrollStatus `json:"image_brightness_and_contrast,omitempty"` // Opt-in if you want the brightness and contrast of your image to be adjusted when likely to improve performance.
-	EnhanceCTA                 *EnrollStatus `json:"enhance_cta,omitempty"`                   // Opt-in if you want keyphrases from your ad sources to be paid with your CTA.
-	TextOptimizations          *EnrollStatus `json:"text_optimizations,omitempty"`            // Opt-in if you want text options you provide appear as primary text, headline or description when it’s likely to improve performance. We may add a caption introduction from your headline options and highlight key sentences when it’s likely to improve performance.
-	ImageBackgroundGen         *EnrollStatus `json:"image_background_gen,omitempty"`          // Opt-in if you want different backgrounds for eligible product images to be created and the version that your audience is most likely to respond to delivered. This feature is generated with AI.
-	ImageUncrop                *EnrollStatus `json:"image_uncrop,omitempty"`                  // Opt-in if you want your image to be automatically expanded to fit more placements. This feature is generated with AI.
-	AdaptToPlacement           *EnrollStatus `json:"adapt_to_placement,omitempty"`            // Opt-in if you want 9:16 images in your catalog to be displayed in supported placements (Instagram Stories/Instagram Reels/Facebook Stories/Facebook Reels).
-	MediaTypeAutomation        *EnrollStatus `json:"media_type_automation,omitempty"`         // Opt-in if you want videos from your catalog to be displayed (along with images) in supported placements.
-	ProductExtensions          *EnrollStatus `json:"product_extensions,omitempty"`            // Opt-in if you want items from your catalog to be shown next to your selected media when it’s likely to improve performance.
-}
-
 const (
 	OPT_OUT = "OPT_OUT"
 	OPT_IN  = "OPT_IN"
 )
+
+type StandardEnhancements struct {
+	EnrollStatus string `json:"enroll_status"`
+}
+
+type CreativeFeaturesSpec struct {
+	StandardEnhancements StandardEnhancements `json:"standard_enhancements"`
+}
 
 // InteractiveComponentsSpec is mainly used for Video Poll Ads.
 type InteractiveComponentsSpec struct {

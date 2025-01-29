@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
 
 const (
-	adsetListLimit = 50
+	adsetListLimit          = 50
+	asyncBatchCheckInterval = 5 * time.Second
 )
 
 // AdsetService is used for working with adsets.
@@ -100,6 +102,82 @@ func (as *AdsetService) Update(ctx context.Context, a Adset) (fb.Time, error) {
 	return res.UpdatedTime, nil
 }
 
+// Delete deletes an adset.
+func (as *AdsetService) Delete(ctx context.Context, id string) error {
+	res := &fb.MinimalResponse{}
+	err := as.c.DeleteJSON(ctx, fb.NewRoute(Version, "/%s", id).String(), nil, res)
+	if err != nil {
+		return err
+	} else if err = res.GetError(); err != nil {
+		return err
+	} else if !res.Success {
+		return fmt.Errorf("deleting the adset failed")
+	}
+
+	return nil
+}
+
+// CopyAsync copies an adset using async batch.
+func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAdsetAsyncBatchResult, error) {
+	if id == "" {
+		return nil, errors.New("cannot copy adset without id")
+	}
+
+	res := &fb.AsyncBatchCreateResponse{}
+
+	req := &fb.AsyncBatchCreateRequest{
+		AsyncBatch: []fb.AsyncBatchOperation{
+			{
+				Method:      "POST",
+				RelativeURL: fmt.Sprintf("%s/copies", id),
+				Name:        fmt.Sprintf("%s_copy", id),
+				Body:        "deep_copy=true",
+			},
+		},
+	}
+
+	err := as.c.PostJSON(ctx, fb.NewRoute(Version, "/").String(), req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.AsyncSessions) == 0 {
+		return nil, errors.New("no async sessions returned")
+	}
+
+	asyncSessionID := res.AsyncSessions[0].ID
+
+	var result *fb.CopiedAdsetAsyncBatchResult
+
+	for {
+		asyncBatchStatus := &fb.AsyncBatch{}
+
+		err = as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", asyncSessionID).
+			Fields("result", "status", "error_code", "exception").
+			String(), asyncBatchStatus)
+		if err != nil {
+			return nil, err
+		}
+
+		if asyncBatchStatus.Status == "COMPLETED" {
+			err = json.Unmarshal([]byte(asyncBatchStatus.Result), &result)
+			if err != nil {
+				return nil, fmt.Errorf("could not unmarshal result: %w", err)
+			}
+
+			break
+		}
+
+		if asyncBatchStatus.Status == "FAILED" {
+			return nil, fmt.Errorf("async batch failed with error code %d: %s", asyncBatchStatus.ErrorCode, asyncBatchStatus.Exception)
+		}
+
+		time.Sleep(asyncBatchCheckInterval)
+	}
+
+	return result, nil
+}
+
 // List returns a list of adsets for an account.
 func (as *AdsetService) List(account string, fields []string) *AdsetListCall {
 	if len(fields) == 0 {
@@ -108,6 +186,18 @@ func (as *AdsetService) List(account string, fields []string) *AdsetListCall {
 
 	return &AdsetListCall{
 		RouteBuilder: fb.NewRoute(Version, "/act_%s/adsets", account).Limit(adsetListLimit).Fields(fields...),
+		c:            as.c,
+	}
+}
+
+// ListWithEffectiveStatus returns a list of adsets for an account with a specific effective status.
+func (as *AdsetService) ListWithEffectiveStatus(account string, status string, fields []string) *AdsetListCall {
+	if len(fields) == 0 {
+		fields = AdsetFields
+	}
+
+	return &AdsetListCall{
+		RouteBuilder: fb.NewRoute(Version, "/act_%s/adsets", account).Limit(adsetListLimit).Fields(fields...).EffectiveStatus(status),
 		c:            as.c,
 	}
 }
@@ -156,7 +246,7 @@ var AdsetFields = []string{
 	"daily_budget", "destination_type", "effective_status",
 	"daily_spend_cap", "daily_min_spend_target", "end_time",
 	"creative_sequence", "frequency_control_specs", "id",
-	"configured_status", "instagram_user_id", "lifetime_budget",
+	"configured_status", "instagram_actor_id", "lifetime_budget",
 	"lifetime_imps", "lifetime_min_spend_target", "lifetime_spend_cap",
 	"name", "budget_remaining", "optimization_goal", "adset_schedule",
 	"adlabels", "recurring_budget_semantics",
@@ -214,15 +304,6 @@ type FrequencyControlSpec struct {
 	Event        string `json:"event"`
 	IntervalDays uint64 `json:"interval_days"`
 	MaxFrequency uint64 `json:"max_frequency"`
-}
-
-// PromotedObject contains the id of a promoted page.
-type PromotedObject struct {
-	PageID             string `json:"page_id,omitempty"`
-	PixelID            string `json:"pixel_id,omitempty"`
-	PixelRule          string `json:"pixel_rule,omitempty"`
-	CustomEventType    string `json:"custom_event_type,omitempty"`
-	CustomConversionID string `json:"custom_conversion_id,omitempty"`
 }
 
 // Targeting contains all the targeting information of an adset.
