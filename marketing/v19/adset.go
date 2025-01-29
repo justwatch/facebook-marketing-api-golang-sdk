@@ -246,7 +246,7 @@ var AdsetFields = []string{
 	"daily_budget", "destination_type", "effective_status",
 	"daily_spend_cap", "daily_min_spend_target", "end_time",
 	"creative_sequence", "frequency_control_specs", "id",
-	"configured_status", "instagram_user_id", "lifetime_budget",
+	"configured_status", "instagram_actor_id", "lifetime_budget",
 	"lifetime_imps", "lifetime_min_spend_target", "lifetime_spend_cap",
 	"name", "budget_remaining", "optimization_goal", "adset_schedule",
 	"adlabels", "recurring_budget_semantics",
