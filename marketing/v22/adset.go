@@ -171,7 +171,7 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 		}
 
 		if asyncBatchStatus.Status == "FAILED" {
-			return nil, fmt.Errorf("async batch failed with error code %d: %s", asyncBatchStatus.ErrorCode, asyncBatchStatus.Exception)
+			return nil, fmt.Errorf("async batch failed with error code %d: %s. Result: %s", asyncBatchStatus.ErrorCode, asyncBatchStatus.Exception, asyncBatchStatus.Result)
 		}
 
 		time.Sleep(asyncBatchCheckInterval)
