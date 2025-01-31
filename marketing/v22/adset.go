@@ -123,7 +123,7 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 		return nil, errors.New("cannot copy adset without id")
 	}
 
-	tempVersion := "v19.0"
+	tempVersion := "v21.0"
 
 	res := &fb.AsyncBatchCreateResponse{}
 
