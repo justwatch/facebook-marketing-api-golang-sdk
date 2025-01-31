@@ -123,6 +123,8 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 		return nil, errors.New("cannot copy adset without id")
 	}
 
+	tempVersion := "v21.0"
+
 	res := &fb.AsyncBatchCreateResponse{}
 
 	req := &fb.AsyncBatchCreateRequest{
@@ -136,7 +138,7 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 		},
 	}
 
-	err := as.c.PostJSON(ctx, fb.NewRoute(Version, "/").String(), req, res)
+	err := as.c.PostJSON(ctx, fb.NewRoute(tempVersion, "/").String(), req, res)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +154,7 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 	for {
 		asyncBatchStatus := &fb.AsyncBatch{}
 
-		err = as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", asyncSessionID).
+		err = as.c.GetJSON(ctx, fb.NewRoute(tempVersion, "/%s", asyncSessionID).
 			Fields("result", "status", "error_code", "exception").
 			String(), asyncBatchStatus)
 		if err != nil {
