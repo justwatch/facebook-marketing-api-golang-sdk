@@ -1,4 +1,4 @@
-package v19
+package v21
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 // Version of the graph API being used.
-const Version = "v19.0"
+const Version = "v21.0"
 
 // Service interacts with the Facebook Marketing API.
 type Service struct {
