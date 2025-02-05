@@ -11,8 +11,12 @@ github.com/cenk/backoff
 ## explicit
 github.com/go-kit/kit/log
 github.com/go-kit/kit/log/level
-# github.com/go-logfmt/logfmt v0.4.0
-## explicit
+# github.com/go-kit/log v0.2.1
+## explicit; go 1.17
+github.com/go-kit/log
+github.com/go-kit/log/level
+# github.com/go-logfmt/logfmt v0.5.1
+## explicit; go 1.17
 github.com/go-logfmt/logfmt
 # github.com/go-stack/stack v1.8.0
 ## explicit
@@ -22,9 +26,6 @@ github.com/gopherjs/gopherjs/js
 # github.com/jtolds/gls v4.20.0+incompatible
 ## explicit
 github.com/jtolds/gls
-# github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-## explicit
-github.com/kr/logfmt
 # github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
 ## explicit
 github.com/smartystreets/assertions
