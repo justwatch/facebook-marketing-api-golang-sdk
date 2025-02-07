@@ -29,7 +29,7 @@ func (ps *PageService) SetPageAccessToken(ctx context.Context, pageID string) (c
 }
 
 // GetPageBackedInstagramAccounts returns the instagram actor associated with a facebook page.
-func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageID string) (*InstagramActor, error) {
+func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageID string) (*InstagramUser, error) {
 	ctx, err := ps.SetPageAccessToken(ctx, pageID)
 	if err != nil {
 		return nil, err
@@ -38,23 +38,19 @@ func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageI
 	fpiga := struct {
 		// Entity in the GraphAPI: IGUser.
 		ConnectedPageBackedInstagramAccount struct {
-			ID string `json:"id"`
+			Data []InstagramUser `json:"data"`
 		} `json:"connected_page_backed_instagram_account"`
-		// Entity in the GraphAPI: InstagramUser
-		PageBackedInstagramAccounts struct {
-			Data []InstagramActor `json:"data"`
-		} `json:"page_backed_instagram_accounts"`
 	}{}
-	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("connected_page_backed_instagram_account{id},page_backed_instagram_accounts{id,username}").String(), &fpiga)
+	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("connected_page_backed_instagram_account{id,username}").String(), &fpiga)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(fpiga.PageBackedInstagramAccounts.Data) != 1 {
+	if len(fpiga.ConnectedPageBackedInstagramAccount.Data) != 1 {
 		return nil, fmt.Errorf("could not get consistent page_backed_instagram_accounts data for facebook page with external id %s", pageID)
 	}
 
-	res := fpiga.PageBackedInstagramAccounts.Data[0]
+	res := fpiga.ConnectedPageBackedInstagramAccount.Data[0]
 	if res.ID == "" {
 		return nil, fmt.Errorf("could not get page_backed_instagram_accounts ID for facebook page with external id %s", pageID)
 	}
@@ -89,10 +85,10 @@ func (ps *PageService) GetOwnedPages(ctx context.Context, businessID string) ([]
 	return res, nil
 }
 
-// GetInstagramActors returns all instagram accounts.
-func (ps *PageService) GetInstagramActors(ctx context.Context, businessID string) ([]InstagramActor, error) {
-	res := []InstagramActor{}
-	route := fb.NewRoute(Version, "/%s/instagram_accounts", businessID).Limit(1000).Fields(instagramActorFields...)
+// GetInstagramUsers returns all instagram accounts.
+func (ps *PageService) GetInstagramUsers(ctx context.Context, businessID string) ([]InstagramUser, error) {
+	res := []InstagramUser{}
+	route := fb.NewRoute(Version, "/%s/instagram_accounts", businessID).Limit(1000).Fields(instagramUserFields...)
 	err := ps.c.GetList(ctx, route.String(), &res)
 	if err != nil {
 		return nil, err
@@ -142,10 +138,10 @@ func (ps *PageService) Get(ctx context.Context, id string) (*Page, error) {
 	return res, nil
 }
 
-// GetInstagramActor returns a single instagram actor.
-func (ps *PageService) GetInstagramActor(ctx context.Context, id string) (*InstagramActor, error) {
-	res := &InstagramActor{}
-	route := fb.NewRoute(Version, "/%s", id).Fields(instagramActorFields...)
+// GetInstagramUser returns a single instagram actor.
+func (ps *PageService) GetInstagramUser(ctx context.Context, id string) (*InstagramUser, error) {
+	res := &InstagramUser{}
+	route := fb.NewRoute(Version, "/%s", id).Fields(instagramUserFields...)
 	err := ps.c.GetJSON(ctx, route.String(), res)
 	if err != nil {
 		return nil, err
@@ -155,8 +151,8 @@ func (ps *PageService) GetInstagramActor(ctx context.Context, id string) (*Insta
 }
 
 var (
-	pageFields           = []string{"id", "global_brand_page_name"}
-	instagramActorFields = []string{"id", "username"}
+	pageFields          = []string{"id", "global_brand_page_name"}
+	instagramUserFields = []string{"id", "username"}
 )
 
 // Page represents a facebook page.
@@ -165,8 +161,8 @@ type Page struct {
 	GlobalBrandPageName string `json:"global_brand_page_name"`
 }
 
-// InstagramActor represents an instagram actor.
-type InstagramActor struct {
+// InstagramUser represents an instagram actor.
+type InstagramUser struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 }
