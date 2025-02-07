@@ -39,9 +39,9 @@ func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageI
 		// Entity in the GraphAPI: IGUser.
 		ConnectedPageBackedInstagramAccount struct {
 			Data []InstagramUser `json:"data"`
-		} `json:"connected_page_backed_instagram_account"`
+		} `json:"instagram_accounts"`
 	}{}
-	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("connected_page_backed_instagram_account{id,username}").String(), &fpiga)
+	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("instagram_accounts{id,username}").String(), &fpiga)
 	if err != nil {
 		return nil, err
 	}
