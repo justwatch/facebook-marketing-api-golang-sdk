@@ -308,7 +308,7 @@ type ObjectStorySpec struct {
 }
 
 type DegreesOfFreedomSpec struct {
-	CreativeFeaturesSpec CreativeFeaturesSpec `json:"creative_features_spec"`
+	CreativeFeaturesSpec *CreativeFeaturesSpec `json:"creative_features_spec"`
 }
 type EnrollStatus struct {
 	EnrollStatus string `json:"enroll_status"` // OPT_IN or OPT_OUT
@@ -316,18 +316,18 @@ type EnrollStatus struct {
 
 // https://developers.facebook.com/docs/marketing-api/creative/advantage-creative/get-started
 type CreativeFeaturesSpec struct {
-	InlineComment              EnrollStatus `json:"inline_comment,omitempty"`                // Opt-in if you want the most relevant comment to be displayed below your ad on Facebook and Instagram.
-	ImageTemplate              EnrollStatus `json:"image_template,omitempty"`                // Opt-in if you want overlays added that show text you have provided along with your selected ad creative when it is likely to improve performance. This feature is generated with AI.
-	ImageTouchups              EnrollStatus `json:"image_touchups,omitempty"`                // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to image ads.
-	VideoAutoCrop              EnrollStatus `json:"video_auto_crop,omitempty"`               // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to video ads.
-	ImageBrightnessAndContrast EnrollStatus `json:"image_brightness_and_contrast,omitempty"` // Opt-in if you want the brightness and contrast of your image to be adjusted when likely to improve performance.
-	EnhanceCTA                 EnrollStatus `json:"enhance_cta,omitempty"`                   // Opt-in if you want keyphrases from your ad sources to be paid with your CTA.
-	TextOptimizations          EnrollStatus `json:"text_optimizations,omitempty"`            // Opt-in if you want text options you provide appear as primary text, headline or description when it’s likely to improve performance. We may add a caption introduction from your headline options and highlight key sentences when it’s likely to improve performance.
-	ImageBackgroundGen         EnrollStatus `json:"image_background_gen,omitempty"`          // Opt-in if you want different backgrounds for eligible product images to be created and the version that your audience is most likely to respond to delivered. This feature is generated with AI.
-	ImageUncrop                EnrollStatus `json:"image_uncrop,omitempty"`                  // Opt-in if you want your image to be automatically expanded to fit more placements. This feature is generated with AI.
-	AdaptToPlacement           EnrollStatus `json:"adapt_to_placement,omitempty"`            // Opt-in if you want 9:16 images in your catalog to be displayed in supported placements (Instagram Stories/Instagram Reels/Facebook Stories/Facebook Reels).
-	MediaTypeAutomation        EnrollStatus `json:"media_type_automation,omitempty"`         // Opt-in if you want videos from your catalog to be displayed (along with images) in supported placements.
-	ProductExtensions          EnrollStatus `json:"product_extensions,omitempty"`            // Opt-in if you want items from your catalog to be shown next to your selected media when it’s likely to improve performance.
+	InlineComment              *EnrollStatus `json:"inline_comment,omitempty"`                // Opt-in if you want the most relevant comment to be displayed below your ad on Facebook and Instagram.
+	ImageTemplate              *EnrollStatus `json:"image_template,omitempty"`                // Opt-in if you want overlays added that show text you have provided along with your selected ad creative when it is likely to improve performance. This feature is generated with AI.
+	ImageTouchups              *EnrollStatus `json:"image_touchups,omitempty"`                // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to image ads.
+	VideoAutoCrop              *EnrollStatus `json:"video_auto_crop,omitempty"`               // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to video ads.
+	ImageBrightnessAndContrast *EnrollStatus `json:"image_brightness_and_contrast,omitempty"` // Opt-in if you want the brightness and contrast of your image to be adjusted when likely to improve performance.
+	EnhanceCTA                 *EnrollStatus `json:"enhance_cta,omitempty"`                   // Opt-in if you want keyphrases from your ad sources to be paid with your CTA.
+	TextOptimizations          *EnrollStatus `json:"text_optimizations,omitempty"`            // Opt-in if you want text options you provide appear as primary text, headline or description when it’s likely to improve performance. We may add a caption introduction from your headline options and highlight key sentences when it’s likely to improve performance.
+	ImageBackgroundGen         *EnrollStatus `json:"image_background_gen,omitempty"`          // Opt-in if you want different backgrounds for eligible product images to be created and the version that your audience is most likely to respond to delivered. This feature is generated with AI.
+	ImageUncrop                *EnrollStatus `json:"image_uncrop,omitempty"`                  // Opt-in if you want your image to be automatically expanded to fit more placements. This feature is generated with AI.
+	AdaptToPlacement           *EnrollStatus `json:"adapt_to_placement,omitempty"`            // Opt-in if you want 9:16 images in your catalog to be displayed in supported placements (Instagram Stories/Instagram Reels/Facebook Stories/Facebook Reels).
+	MediaTypeAutomation        *EnrollStatus `json:"media_type_automation,omitempty"`         // Opt-in if you want videos from your catalog to be displayed (along with images) in supported placements.
+	ProductExtensions          *EnrollStatus `json:"product_extensions,omitempty"`            // Opt-in if you want items from your catalog to be shown next to your selected media when it’s likely to improve performance.
 }
 
 const (
