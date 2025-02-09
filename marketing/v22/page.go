@@ -3,7 +3,6 @@ package v22
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -29,28 +28,21 @@ func (ps *PageService) SetPageAccessToken(ctx context.Context, pageID string) (c
 }
 
 // GetPageBackedInstagramAccounts returns the instagram actor associated with a facebook page.
-func (ps *PageService) GetPageBackedInstagramAccounts(ctx context.Context, pageID string) (*InstagramUser, error) {
+func (ps *PageService) GetInstagramBusinessAccount(ctx context.Context, pageID string) (*InstagramUser, error) {
 	ctx, err := ps.SetPageAccessToken(ctx, pageID)
 	if err != nil {
 		return nil, err
 	}
 
 	fpiga := struct {
-		// Entity in the GraphAPI: IGUser.
-		ConnectedPageBackedInstagramAccount struct {
-			Data []InstagramUser `json:"data"`
-		} `json:"instagram_accounts"`
+		InstagramBusinessAccount InstagramUser `json:"instagram_business_account"`
 	}{}
-	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("instagram_accounts{id,username}").String(), &fpiga)
+	err = ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("instagram_business_account{id,username}").String(), &fpiga)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(fpiga.ConnectedPageBackedInstagramAccount.Data) != 1 {
-		return nil, fmt.Errorf("could not get consistent page_backed_instagram_accounts data for facebook page with external id %s", pageID)
-	}
-
-	res := fpiga.ConnectedPageBackedInstagramAccount.Data[0]
+	res := fpiga.InstagramBusinessAccount
 	if res.ID == "" {
 		return nil, fmt.Errorf("could not get page_backed_instagram_accounts ID for facebook page with external id %s", pageID)
 	}
@@ -97,29 +89,15 @@ func (ps *PageService) GetInstagramUsers(ctx context.Context, businessID string)
 	return res, nil
 }
 
-func (aas *PageService) ListIGUsers(ctx context.Context) ([]IGUser, error) {
-	res := []IGUser{}
-	rb := fb.NewRoute(Version, "/me/accounts").Limit(1000).Fields("id", "name", "instagram_business_account", "connected_instagram_account")
+func (aas *PageService) ListIGUsers(ctx context.Context) ([]InstagramUser, error) {
+	res := []InstagramUser{}
+	rb := fb.NewRoute(Version, "/me/instagram_accounts").Limit(1000).Limit(1000).Fields(instagramUserFields...)
 	err := aas.c.GetList(ctx, rb.String(), &res)
 	if err != nil {
 		return nil, err
 	}
-	res = slices.DeleteFunc(res, func(i IGUser) bool {
-		return i.InstagramBusinessAccount.ID == "" && i.ConnectedInstagramAccount.ID == ""
-	})
 
 	return res, nil
-}
-
-type IGUser struct {
-	Name                     string `json:"name"`
-	InstagramBusinessAccount struct {
-		ID string `json:"id"`
-	} `json:"instagram_business_account"`
-	ConnectedInstagramAccount struct {
-		ID string `json:"id"`
-	} `json:"connected_instagram_account"`
-	ID string `json:"id"`
 }
 
 // Get returns a single page.
@@ -138,7 +116,7 @@ func (ps *PageService) Get(ctx context.Context, id string) (*Page, error) {
 	return res, nil
 }
 
-// GetInstagramUser returns a single instagram actor.
+// GetInstagramUser returns a single instagram user.
 func (ps *PageService) GetInstagramUser(ctx context.Context, id string) (*InstagramUser, error) {
 	res := &InstagramUser{}
 	route := fb.NewRoute(Version, "/%s", id).Fields(instagramUserFields...)
@@ -161,7 +139,7 @@ type Page struct {
 	GlobalBrandPageName string `json:"global_brand_page_name"`
 }
 
-// InstagramUser represents an instagram actor.
+// InstagramActor represents an instagram actor.
 type InstagramUser struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
