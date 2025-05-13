@@ -23,6 +23,24 @@ func (aas *AdAccountService) List(ctx context.Context, businessID string) ([]AdA
 	return res, nil
 }
 
+// Me retrieves information about the current account
+func (aas *AdAccountService) Me(ctx context.Context) (*AccountInfo, error) {
+	res := &AccountInfo{}
+	rb := fb.NewRoute(Version, "/me").Fields("id", "name")
+	err := aas.c.GetJSON(ctx, rb.String(), res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// AccountInfo represents information about the current account
+type AccountInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // AdAccount represents an ad account.
 type AdAccount struct {
 	Name         string `json:"name"`
