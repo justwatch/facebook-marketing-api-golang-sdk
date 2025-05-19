@@ -91,32 +91,14 @@ func (ps *PageService) GetOwnedPages(ctx context.Context, businessID string) ([]
 
 // GetInstagramActors returns all instagram accounts.
 func (ps *PageService) GetInstagramActors(ctx context.Context, businessID string) ([]InstagramActor, error) {
-	type Page struct {
-		ID string `json:"id"`
-	}
-	var pages []Page
-	pageRoute := fb.NewRoute(Version, "/%s/accounts", businessID).Fields("id").Limit(100)
-	if err := ps.c.GetList(ctx, pageRoute.String(), &pages); err != nil {
+	res := []InstagramActor{}
+	route := fb.NewRoute(Version, "/%s/instagram_accounts", businessID).Limit(1000).Fields(instagramActorFields...)
+	err := ps.c.GetList(ctx, route.String(), &res)
+	if err != nil {
 		return nil, err
 	}
 
-	var actors []InstagramActor
-	for _, page := range pages {
-		var wrapper struct {
-			InstagramAccount *InstagramActor `json:"instagram_business_account"`
-		}
-
-		igRoute := fb.NewRoute(Version, "/%s", page.ID).Fields("instagram_business_account{id,username}")
-		if err := ps.c.GetJSON(ctx, igRoute.String(), &wrapper); err != nil {
-			continue // optionally log
-		}
-
-		if wrapper.InstagramAccount != nil {
-			actors = append(actors, *wrapper.InstagramAccount)
-		}
-	}
-
-	return actors, nil
+	return res, nil
 }
 
 func (aas *PageService) ListIGUsers(ctx context.Context) ([]IGUser, error) {
