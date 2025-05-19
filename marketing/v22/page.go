@@ -79,25 +79,58 @@ func (ps *PageService) GetOwnedPages(ctx context.Context, businessID string) ([]
 
 // GetInstagramUsers returns all instagram accounts.
 func (ps *PageService) GetInstagramUsers(ctx context.Context, businessID string) ([]InstagramUser, error) {
-	res := []InstagramUser{}
-	route := fb.NewRoute(Version, "/%s/instagram_accounts", businessID).Limit(1000).Fields(instagramUserFields...)
-	err := ps.c.GetList(ctx, route.String(), &res)
-	if err != nil {
+	type Page struct {
+		ID string `json:"id"`
+	}
+	var pages []Page
+	pageRoute := fb.NewRoute(Version, "/%s/accounts", businessID).Fields("id").Limit(100)
+	if err := ps.c.GetList(ctx, pageRoute.String(), &pages); err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	var igUsers []InstagramUser
+	for _, page := range pages {
+		var wrapper struct {
+			InstagramAccount *InstagramUser `json:"instagram_business_account"`
+		}
+		igRoute := fb.NewRoute(Version, "/%s", page.ID).Fields("instagram_business_account{id,username}")
+		if err := ps.c.GetJSON(ctx, igRoute.String(), &wrapper); err != nil {
+			continue
+		}
+		if wrapper.InstagramAccount != nil {
+			igUsers = append(igUsers, *wrapper.InstagramAccount)
+		}
+	}
+
+	return igUsers, nil
 }
 
-func (aas *PageService) ListIGUsers(ctx context.Context) ([]InstagramUser, error) {
-	res := []InstagramUser{}
-	rb := fb.NewRoute(Version, "/me/instagram_accounts").Limit(1000).Limit(1000).Fields(instagramUserFields...)
-	err := aas.c.GetList(ctx, rb.String(), &res)
-	if err != nil {
+func (ps *PageService) ListIGUsers(ctx context.Context) ([]InstagramUser, error) {
+	type Page struct {
+		ID string `json:"id"`
+	}
+	var pages []Page
+	pageRoute := fb.NewRoute(Version, "/me/accounts").Fields("id").Limit(100)
+	if err := ps.c.GetList(ctx, pageRoute.String(), &pages); err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	// Step 2: Get IG account from each page
+	var igUsers []InstagramUser
+	for _, page := range pages {
+		var wrapper struct {
+			InstagramAccount *InstagramUser `json:"instagram_business_account"`
+		}
+		igRoute := fb.NewRoute(Version, "/%s", page.ID).Fields("instagram_business_account{id,username}")
+		if err := ps.c.GetJSON(ctx, igRoute.String(), &wrapper); err != nil {
+			continue
+		}
+		if wrapper.InstagramAccount != nil {
+			igUsers = append(igUsers, *wrapper.InstagramAccount)
+		}
+	}
+
+	return igUsers, nil
 }
 
 // Get returns a single page.
