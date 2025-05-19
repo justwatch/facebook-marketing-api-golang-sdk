@@ -83,7 +83,7 @@ func (ps *PageService) GetInstagramUsers(ctx context.Context, businessID string)
 		ID string `json:"id"`
 	}
 	var pages []Page
-	pageRoute := fb.NewRoute(Version, "/%s/accounts", businessID).Fields("id").Limit(100)
+	pageRoute := fb.NewRoute(Version, "/%s/owned_pages", businessID).Fields("id").Limit(100)
 	if err := ps.c.GetList(ctx, pageRoute.String(), &pages); err != nil {
 		return nil, err
 	}
