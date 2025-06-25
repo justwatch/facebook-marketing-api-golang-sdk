@@ -63,6 +63,25 @@ func (ir *InsightsRequest) Download(ctx context.Context) ([]Insight, error) {
 
 // GenerateReport creates the insights report, waits until it's finished building, reads to c and then deletes it.
 func (ir *InsightsRequest) GenerateReport(ctx context.Context, c chan<- Insight) (uint64, error) {
+	// Try async report generation first
+	count, err := ir.generateReportAsync(ctx, c)
+	if err != nil {
+		_ = level.Warn(ir.l).Log("msg", "async report generation failed, trying direct fallback", "err", err)
+		// Fallback to direct insights endpoint
+		return ir.generateReportDirect(ctx, c)
+	}
+
+	// If async succeeded but returned no data, try direct fallback
+	if count == 0 {
+		_ = level.Warn(ir.l).Log("msg", "async report returned no data, trying direct fallback")
+		return ir.generateReportDirect(ctx, c)
+	}
+
+	return count, nil
+}
+
+// generateReportAsync creates the insights report using the async approach
+func (ir *InsightsRequest) generateReportAsync(ctx context.Context, c chan<- Insight) (uint64, error) {
 	run := &struct {
 		ReportRunID            string `json:"report_run_id"`
 		AccountID              string `json:"account_id"`
@@ -155,6 +174,63 @@ func (ir *InsightsRequest) GenerateReport(ctx context.Context, c chan<- Insight)
 		}
 		stats.SetProgress(impressions, resp.Summary.Impressions)
 		url = resp.Paging.Paging.Next
+	}
+
+	return count, nil
+}
+
+// generateReportDirect uses the direct insights endpoint as a fallback
+func (ir *InsightsRequest) generateReportDirect(ctx context.Context, c chan<- Insight) (uint64, error) {
+	ir.RouteBuilder.DefaultSummary(true)
+	ir.RouteBuilder.UnifiedAttributionSettings(true)
+
+	url := ir.RouteBuilder.String()
+	_ = level.Debug(ir.l).Log("msg", "trying direct insights fallback", "url", url)
+
+	var count uint64
+
+	resp := &struct {
+		fb.Paging
+		Summary struct {
+			Impressions uint64 `json:"impressions,string"`
+		} `json:"summary"`
+		Data []Insight `json:"data"`
+	}{}
+
+	err := ir.c.GetJSON(ctx, url, resp)
+	if err != nil {
+		_ = level.Error(ir.l).Log("msg", "direct insights fallback failed", "url", url, "err", err)
+		return 0, err
+	}
+
+	_ = level.Debug(ir.l).Log("msg", "direct insights fallback succeeded", "data_count", len(resp.Data))
+
+	for _, d := range resp.Data {
+		count++
+		c <- d
+	}
+
+	nextURL := resp.Paging.Paging.Next
+	for nextURL != "" {
+		nextResp := &struct {
+			fb.Paging
+			Summary struct {
+				Impressions uint64 `json:"impressions,string"`
+			} `json:"summary"`
+			Data []Insight `json:"data"`
+		}{}
+
+		err := ir.c.GetJSON(ctx, nextURL, nextResp)
+		if err != nil {
+			return count, err
+		}
+
+		for _, d := range nextResp.Data {
+			count++
+			c <- d
+		}
+
+		nextURL = nextResp.Paging.Paging.Next
 	}
 
 	return count, nil
