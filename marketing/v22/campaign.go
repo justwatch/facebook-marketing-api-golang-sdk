@@ -8,6 +8,51 @@ import (
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
 
+// EffectiveStatus represents the possible values for a campaign's
+// effective_status field as defined by the Facebook Ads API.
+// Using a typed constant reduces the chance of typos compared
+// to raw string values.
+type EffectiveStatus string
+
+const (
+	EffectiveStatusActive             EffectiveStatus = "ACTIVE"
+	EffectiveStatusPaused             EffectiveStatus = "PAUSED"
+	EffectiveStatusDeleted            EffectiveStatus = "DELETED"
+	EffectiveStatusPendingReview      EffectiveStatus = "PENDING_REVIEW"
+	EffectiveStatusDisapproved        EffectiveStatus = "DISAPPROVED"
+	EffectiveStatusPreApproved        EffectiveStatus = "PREAPPROVED"
+	EffectiveStatusPendingBillingInfo EffectiveStatus = "PENDING_BILLING_INFO"
+	EffectiveStatusCampaignPaused     EffectiveStatus = "CAMPAIGN_PAUSED"
+	EffectiveStatusArchived           EffectiveStatus = "ARCHIVED"
+	EffectiveStatusAdsetPaused        EffectiveStatus = "ADSET_PAUSED"
+)
+
+// DefaultEffectiveStatuses is the default set of effective_status values
+// returned by the CampaignService.List call.
+var DefaultEffectiveStatuses = []EffectiveStatus{
+	EffectiveStatusActive,
+	EffectiveStatusPaused,
+	EffectiveStatusDeleted,
+	EffectiveStatusPendingReview,
+	EffectiveStatusDisapproved,
+	EffectiveStatusPreApproved,
+	EffectiveStatusPendingBillingInfo,
+	EffectiveStatusCampaignPaused,
+	EffectiveStatusArchived,
+	EffectiveStatusAdsetPaused,
+}
+
+// toStrings converts a slice of EffectiveStatus values into a slice of
+// raw strings. This is useful when constructing filtering parameters
+// for API calls that expect string values.
+func toStrings(status []EffectiveStatus) []string {
+	out := make([]string, len(status))
+	for i, v := range status {
+		out[i] = string(v)
+	}
+	return out
+}
+
 // CampaignService works with campaigns.
 type CampaignService struct {
 	c *fb.Client
@@ -74,13 +119,22 @@ func (cs *CampaignService) Update(ctx context.Context, c Campaign) error {
 
 // List creates a new CampaignListCall.
 func (cs *CampaignService) List(act string) *CampaignListCall {
+	return cs.ListByEffectiveStatus(act, DefaultEffectiveStatuses...)
+}
+
+// ListByEffectiveStatus returns a CampaignListCall filtered by the given
+// effective_status values. If no statuses are provided, the filter is omitted.
+// Behavior otherwise matches List.
+func (cs *CampaignService) ListByEffectiveStatus(act string, statuses ...EffectiveStatus) *CampaignListCall {
+	rb := fb.NewRoute(Version, "/act_%s/campaigns", act).
+		Fields(campaignFieldsShort...).
+		Limit(1000)
+
+	if len(statuses) > 0 {
+		rb = rb.EffectiveStatus(toStrings(statuses)...)
+	}
 	return &CampaignListCall{
-		RouteBuilder: fb.NewRoute(Version, "/act_%s/campaigns", act).Fields(campaignFieldsShort...).Limit(1000).Filtering(fb.Filter{
-			Field:    "effective_status",
-			Operator: "IN",
-			Value:    []string{"ACTIVE", "PAUSED", "DELETED", "PENDING_REVIEW", "DISAPPROVED", "PREAPPROVED", "PENDING_BILLING_INFO", "CAMPAIGN_PAUSED", "ARCHIVED", "ADSET_PAUSED"},
-		}),
-		c: cs.c,
+		RouteBuilder: rb, c: cs.c,
 	}
 }
 
