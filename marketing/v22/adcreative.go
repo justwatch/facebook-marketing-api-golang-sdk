@@ -101,6 +101,15 @@ func (s *AdCreativeService) List(act string, fields []string) *AdCreativeListCal
 		RouteBuilder: fb.NewRoute(Version, "/act_%s/ads", act).Limit(adCreativeReadListLimit).Fields(fmt.Sprintf("adcreatives{%v}", strings.Join(fields, ","))),
 	}
 }
+func (s *AdCreativeService) ListOfCampaign(campaignID string, fields []string) *AdCreativeListCall {
+	if len(fields) == 0 {
+		fields = Adcreativefields
+	}
+	return &AdCreativeListCall{
+		c:            s.c,
+		RouteBuilder: fb.NewRoute(Version, "/%s/ads", campaignID).Limit(adCreativeReadListLimit).Fields(fmt.Sprintf("adcreatives{%v}", strings.Join(fields, ","))),
+	}
+}
 
 // Do calls the graph API.
 func (s *AdCreativeListCall) Do(ctx context.Context) ([]AdCreative, error) {
