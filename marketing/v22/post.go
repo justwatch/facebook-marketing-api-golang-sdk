@@ -11,6 +11,10 @@ import (
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
 
+const (
+	postListLimit = 50
+)
+
 // PostService works on posts.
 type PostService struct {
 	c *fb.Client
@@ -38,6 +42,21 @@ func (ps *PostService) GetPostID(ctx context.Context, pID string) (*string, erro
 
 	id := res.From.ID + "_" + res.ID
 	return &id, nil
+}
+
+// SetPageAccessToken tries to retrieve the access token for a facebook page and includes it in the passed context so the fb.Client can use it for making requests.
+func (ps *PostService) SetPageAccessToken(ctx context.Context, pageID string) (context.Context, error) {
+	tc := struct {
+		AccessToken string `json:"access_token"`
+	}{}
+	err := ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", pageID).Fields("access_token").String(), &tc)
+	if err != nil {
+		return ctx, err
+	} else if tc.AccessToken == "" {
+		return ctx, fmt.Errorf("could not get page access token for '%s'", pageID)
+	}
+
+	return fb.SetPageAccessToken(ctx, tc.AccessToken), nil
 }
 
 // Get returns a single post.
@@ -213,6 +232,45 @@ func (clc *CommentListCall) Read(ctx context.Context, c chan<- Comment) error {
 	return wg.Wait()
 }
 
+// ListOfPage returns a PostListCall for listing posts of a page.
+func (ps *PostService) ListOfPage(pageID string, fields []string) *PostListCall {
+	if len(fields) == 0 {
+		fields = postFields
+	}
+
+	return &PostListCall{
+		RouteBuilder: fb.NewRoute(Version, "/%s/posts", pageID).Limit(postListLimit).Fields(fields...),
+		c:            ps.c,
+		pageID:       pageID,
+		ps:           ps,
+	}
+}
+
+// PostListCall is used for listing posts of a page.
+type PostListCall struct {
+	*fb.RouteBuilder
+	c      *fb.Client
+	pageID string
+	ps     *PostService
+}
+
+// Do calls the graph API and returns all posts as a slice.
+func (plc *PostListCall) Do(ctx context.Context) ([]Post, error) {
+	// Set page access token for accessing page posts
+	ctx, err := plc.ps.SetPageAccessToken(ctx, plc.pageID)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []Post{}
+	err = plc.c.GetList(ctx, plc.RouteBuilder.String(), &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // Other fields that can be used:
 // "actions",
 // "admin_creator",
@@ -261,7 +319,7 @@ func (clc *CommentListCall) Read(ctx context.Context, c chan<- Comment) error {
 // "video_buying_eligibility",
 // "width",.
 var (
-	postFields            = []string{"call_to_action", "from", "id", "message", "picture", "promotable_id"}
+	postFields            = []string{"call_to_action", "from", "id", "message", "picture", "promotable_id", "is_eligible_for_promotion", "created_time"}
 	reactions             = []string{"LIKE", "LOVE", "WOW", "HAHA", "SAD", "ANGRY", "THANKFUL"}
 	postAttachmentsFields = []string{"description", "name", "type", "url", "target", "media_type"}
 )
@@ -292,6 +350,7 @@ type Post struct {
 	MultiShareOptimized    bool                            `json:"multi_share_optimized"`
 	ObjectID               string                          `json:"object_id"`
 	PromotableID           string                          `json:"promotable_id"`
+	IsEligibleForPromotion bool                            `json:"is_eligible_for_promotion"`
 	PromotionStatus        string                          `json:"promotion_status"`
 	StatusType             string                          `json:"status_type"`
 	Subscribed             bool                            `json:"subscribed"`
