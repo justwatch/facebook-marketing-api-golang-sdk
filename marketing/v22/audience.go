@@ -25,6 +25,18 @@ type AudienceService struct {
 	c *fb.Client
 }
 
+// audienceFieldsCommon are the common fields used across most methods
+var audienceFieldsCommon = []string{
+	"id",
+	"name",
+	"account_id",
+	"description",
+	"subtype",
+	"approximate_count_upper_bound",
+	"approximate_count_lower_bound",
+	"adaccounts",
+}
+
 // Create uploads a new custom audience and returns the id of the custom audience.
 func (as *AudienceService) Create(ctx context.Context, act string, a CustomAudience) (string, error) {
 	if a.ID != "" {
@@ -226,7 +238,9 @@ func (as *AudienceService) DeleteLookalikes(ctx context.Context, id string) erro
 // Get returns a single audience.
 func (as *AudienceService) Get(ctx context.Context, id string) (*CustomAudience, error) {
 	res := &CustomAudience{}
-	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields("id", "name", "description", "subtype", "approximate_count_upper_bound", "approximate_count_lower_bound", "rule", "customer_file_source", "lookalike_audience_ids", "adaccounts").String(), res)
+	additionalFields := []string{"rule", "customer_file_source", "lookalike_audience_ids"}
+	allFields := append(audienceFieldsCommon, additionalFields...)
+	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields(allFields...).String(), res)
 	if err != nil {
 		if fb.IsNotFound(err) {
 			return nil, nil
@@ -241,9 +255,11 @@ func (as *AudienceService) Get(ctx context.Context, id string) (*CustomAudience,
 // ListCustom returns all custom audiences for that account.
 func (as *AudienceService) ListCustom(ctx context.Context, act string) ([]CustomAudience, error) {
 	res := []CustomAudience{}
+	additionalFields := []string{"lookalike_spec"}
+	allFields := append(audienceFieldsCommon, additionalFields...)
 	route := fb.NewRoute(Version, "/act_%s/customaudiences", act).
 		Limit(250).
-		Fields("id", "name", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts", "lookalike_spec") // , "rule")
+		Fields(allFields...) // , "rule")
 	err := as.c.GetList(ctx, route.String(), &res)
 	if err != nil {
 		return nil, err
@@ -258,7 +274,7 @@ func (as *AudienceService) ListCustomFiltered(ctx context.Context, act string, f
 	res := []CustomAudience{}
 	route := fb.NewRoute(Version, "/act_%s/customaudiences", act).
 		Limit(250).
-		Fields("id", "name", "account_id", "description", "approximate_count_upper_bound", "approximate_count_lower_bound", "subtype", "adaccounts"). // , "rule")
+		Fields(audienceFieldsCommon...). // , "rule")
 		Filtering(filtering...)
 	err := as.c.GetList(ctx, route.String(), &res)
 	if err != nil {
