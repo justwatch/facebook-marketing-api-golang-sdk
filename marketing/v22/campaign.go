@@ -131,8 +131,15 @@ func (cs *CampaignService) ListByEffectiveStatus(act string, statuses ...Effecti
 		Limit(1000)
 
 	if len(statuses) > 0 {
-		rb = rb.EffectiveStatus(toStrings(statuses)...)
+		rb = rb.Filtering(
+			fb.Filter{
+				Field:    "effective_status",
+				Operator: "IN",
+				Value:    toStrings(statuses),
+			},
+		)
 	}
+
 	return &CampaignListCall{
 		RouteBuilder: rb, c: cs.c,
 	}
