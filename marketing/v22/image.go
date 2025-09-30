@@ -27,7 +27,7 @@ func (is *ImageService) ReadList(ctx context.Context, act string, res chan<- Ima
 	wg.Go(func() error {
 		defer close(jres)
 
-		return is.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/adimages", act).Fields("name", "hash", "url", "width", "height").Limit(1000).String(), jres)
+		return is.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/adimages", act).Fields("name", "hash", "url", "width", "height").Limit(500).String(), jres)
 	})
 	wg.Go(func() error {
 		for e := range jres {

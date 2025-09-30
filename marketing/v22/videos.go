@@ -79,7 +79,7 @@ func (vs *VideoService) ReadList(ctx context.Context, act string, res chan<- Vid
 	wg.Go(func() error {
 		defer close(jres)
 
-		return vs.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/advideos", act).Fields(advideoFields...).Limit(1000).String(), jres)
+		return vs.c.ReadList(ctx, fb.NewRoute(Version, "/act_%s/advideos", act).Fields(advideoFields...).Limit(200).String(), jres)
 	})
 	wg.Go(func() error {
 		for e := range jres {
