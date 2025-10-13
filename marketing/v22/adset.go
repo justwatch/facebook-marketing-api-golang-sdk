@@ -205,7 +205,7 @@ type Adset struct {
 	DSABeneficiary              string                 `json:"dsa_beneficiary,omitempty"`
 	DSAPayor                    string                 `json:"dsa_payor,omitempty"`
 	InstagramUserID             string                 `json:"instagram_user_id,omitempty"`
-	RegionalRegulatedCategories string                 `json:"regional_regulated_categories,omitempty"`
+	RegionalRegulatedCategories []string               `json:"regional_regulated_categories,omitempty"`
 }
 
 // FrequencyControlSpec controls the frequency of an adset.
