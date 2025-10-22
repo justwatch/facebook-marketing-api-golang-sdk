@@ -325,6 +325,7 @@ type EnrollStatus struct {
 
 // https://developers.facebook.com/docs/marketing-api/creative/advantage-creative/get-started
 type CreativeFeaturesSpec struct {
+	StandardEnhancements       *EnrollStatus `json:"standard_enhancements,omitempty"`           // Opt-out to disable all Advantage+ Creative enhancements at once
 	InlineComment              *EnrollStatus `json:"inline_comment,omitempty"`                // Opt-in if you want the most relevant comment to be displayed below your ad on Facebook and Instagram.
 	ImageTemplate              *EnrollStatus `json:"image_template,omitempty"`                // Opt-in if you want overlays added that show text you have provided along with your selected ad creative when it is likely to improve performance. This feature is generated with AI.
 	ImageTouchups              *EnrollStatus `json:"image_touchups,omitempty"`                // Opt-in if you want your chosen media to be automatically cropped and expanded to fit more placements. Only applicable to image ads.
