@@ -290,6 +290,7 @@ type IDContainer struct {
 // GeoLocations is a set of countries, cities, and regions that can be targeted.
 type GeoLocations struct {
 	Countries     []string `json:"countries,omitempty"`
+	CountryGroups []string `json:"country_groups,omitempty"`
 	LocationTypes []string `json:"location_types,omitempty"`
 	Cities        []City   `json:"cities,omitempty"`
 	Regions       []Region `json:"regions,omitempty"`
