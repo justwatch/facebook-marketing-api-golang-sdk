@@ -211,6 +211,27 @@ func (as *AudienceService) ListAdAccounts(ctx context.Context, audienceID string
 	return res.Data, nil
 }
 
+type SharedAccountInfo struct {
+	AccountID string `json:"account_id"`
+	Business  struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"business"`
+}
+
+// GetSharedAccountInfo returns sharing information for a custom audience.
+func (as *AudienceService) GetSharedAccountInfo(ctx context.Context, customAudienceID string) ([]SharedAccountInfo, error) {
+	res := struct {
+		Data []SharedAccountInfo `json:"data"`
+	}{}
+	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s/shared_account_info", customAudienceID).String(), &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Data, nil
+}
+
 // Delete removes a single audience.
 func (as *AudienceService) Delete(ctx context.Context, id string) error {
 	return as.c.Delete(ctx, fb.NewRoute(Version, "/%s", id).String())
