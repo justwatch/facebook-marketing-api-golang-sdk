@@ -197,7 +197,7 @@ type Adset struct {
 	PacingType                   []string               `json:"pacing_type,omitempty"`
 	PromotedObject               *PromotedObject        `json:"promoted_object,omitempty"`
 	RecurringBudgetSemantics     bool                   `json:"recurring_budget_semantics,omitempty"`
-	StartTime                    fb.Time                `json:"start_time,omitempty"`
+	StartTime                    *fb.Time               `json:"start_time,omitempty"`
 	Status                       string                 `json:"status,omitempty"`
 	Targeting                    *Targeting             `json:"targeting,omitempty"`
 	UpdatedTime                  *fb.Time               `json:"updated_time,omitempty"`
