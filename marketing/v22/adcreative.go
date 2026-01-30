@@ -575,72 +575,46 @@ type AssetFeedSpec struct {
 	Descriptions []AssetFeedSpecTextAsset `json:"descriptions,omitempty"`
 	// Link URLs
 	LinkURLs []AssetFeedSpecLinkURL `json:"link_urls,omitempty"`
-	// Call to action types
-	CallToActionTypes []AssetFeedSpecCTA `json:"call_to_action_types,omitempty"`
+	// API expects: ["LEARN_MORE", "SHOP_NOW"], NOT objects.
+	CallToActionTypes []string `json:"call_to_action_types,omitempty"`
 	// Ad formats to generate
 	AdFormats []string `json:"ad_formats,omitempty"`
 	// Rules for customizing assets per placement
 	AssetCustomizationRules []AssetCustomizationRule `json:"asset_customization_rules,omitempty"`
-	// Optimization type: DEGREES_OF_FREEDOM (DOF) or ASSET_FEED_STANDARD
+	// Optimization type: DEGREES_OF_FREEDOM (DOF) or ASSET_FEED_STANDARD or ASSET_CUSTOMIZATION
 	OptimizationType string `json:"optimization_type,omitempty"`
 }
 
 // AssetFeedSpecVideo represents a video asset in the asset feed
 type AssetFeedSpecVideo struct {
-	// The video ID from the ad account's video library
-	VideoID string `json:"video_id,omitempty"`
-	// URL tags to append to the landing page URL when this video is shown
-	URLTags string `json:"url_tags,omitempty"`
-	// Hash of the thumbnail image
-	ThumbnailHash string `json:"thumbnail_hash,omitempty"`
-	// URL of the thumbnail image
-	ThumbnailURL string `json:"thumbnail_url,omitempty"`
-	// Label to reference this video in asset_customization_rules
-	AdLabel string `json:"adlabel,omitempty"`
+	VideoID       string       `json:"video_id,omitempty"`
+	URLTags       string       `json:"url_tags,omitempty"`
+	ThumbnailHash string       `json:"thumbnail_hash,omitempty"`
+	ThumbnailURL  string       `json:"thumbnail_url,omitempty"`
+	AdLabels      []AssetLabel `json:"adlabels,omitempty"`
 }
 
 // AssetFeedSpecImage represents an image asset in the asset feed
 type AssetFeedSpecImage struct {
-	// Hash of the image from the ad account's image library
-	Hash string `json:"hash,omitempty"`
-	// URL of the image (alternative to hash)
-	URL string `json:"url,omitempty"`
-	// URL tags to append to the landing page URL when this image is shown
-	URLTags string `json:"url_tags,omitempty"`
-	// Label to reference this image in asset_customization_rules
-	AdLabel string `json:"adlabel,omitempty"`
+	Hash     string       `json:"hash,omitempty"`
+	URL      string       `json:"url,omitempty"`
+	URLTags  string       `json:"url_tags,omitempty"`
+	AdLabels []AssetLabel `json:"adlabels,omitempty"`
 }
 
 // AssetFeedSpecTextAsset represents a text asset (body, title, description)
 type AssetFeedSpecTextAsset struct {
-	// The text content
-	Text string `json:"text,omitempty"`
-	// URL tags to append when this text is shown
-	URLTags string `json:"url_tags,omitempty"`
-	// Label to reference this text in asset_customization_rules
-	AdLabel string `json:"adlabel,omitempty"`
+	Text     string       `json:"text,omitempty"`
+	URLTags  string       `json:"url_tags,omitempty"`
+	AdLabels []AssetLabel `json:"adlabels,omitempty"`
 }
 
 // AssetFeedSpecLinkURL represents a link URL asset
 type AssetFeedSpecLinkURL struct {
-	// The website URL
-	WebsiteURL string `json:"website_url,omitempty"`
-	// Display URL shown in the ad
-	DisplayURL string `json:"display_url,omitempty"`
-	// Deeplink for app
-	Deeplink string `json:"deeplink,omitempty"`
-	// Label to reference this link in asset_customization_rules
-	AdLabel string `json:"adlabel,omitempty"`
-}
-
-// AssetFeedSpecCTA represents a call to action type
-type AssetFeedSpecCTA struct {
-	// The CTA type (LEARN_MORE, SHOP_NOW, etc.)
-	Type string `json:"type,omitempty"`
-	// Value containing link info
-	Value *AdCreativeLinkDataCallToActionValue `json:"value,omitempty"`
-	// Label to reference this CTA in asset_customization_rules
-	AdLabel string `json:"adlabel,omitempty"`
+	WebsiteURL string       `json:"website_url,omitempty"`
+	DisplayURL string       `json:"display_url,omitempty"`
+	Deeplink   string       `json:"deeplink,omitempty"`
+	AdLabels   []AssetLabel `json:"adlabels,omitempty"`
 }
 
 // AssetCustomizationRule defines which assets to use for specific placements
