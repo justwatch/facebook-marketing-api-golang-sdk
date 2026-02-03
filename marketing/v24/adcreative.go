@@ -154,6 +154,7 @@ var Adcreativefields = []string{
 	"account_id",
 	"body", // The body of the ad. Not supported for video post creatives.
 	"call_to_action_type",
+	"destination_spec",
 	"effective_instagram_media_id",
 	"effective_object_story_id",
 	"image_hash",
@@ -271,6 +272,8 @@ type AdCreative struct {
 	DegreesOfFreedomSpec *DegreesOfFreedomSpec `json:"degrees_of_freedom_spec,omitempty"`
 	// AssetFeedSpec for dynamic creative or placement-specific asset customization
 	AssetFeedSpec *AssetFeedSpec `json:"asset_feed_spec,omitempty"`
+	// DestinationSpec for website destination optimization (v24.0+)
+	DestinationSpec json.RawMessage `json:"destination_spec,omitempty"`
 }
 
 type adCreativeContainer struct {

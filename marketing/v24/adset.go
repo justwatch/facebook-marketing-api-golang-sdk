@@ -162,7 +162,7 @@ var AdsetFields = []string{
 	"adlabels", "recurring_budget_semantics",
 	"rf_prediction_id", "source_adset_id", "start_time", "targeting",
 	"time_based_ad_rotation_id_blocks", "time_based_ad_rotation_intervals",
-	"pacing_type", "promoted_object", "recommendations",
+	"pacing_type", "placement_soft_opt_out", "promoted_object", "recommendations",
 	"source_adset", "status", "updated_time", "use_new_app_click",
 	"campaign{name,objective,effective_status}", "dsa_beneficiary", "dsa_payor",
 }
@@ -195,6 +195,7 @@ type Adset struct {
 	Name                         string                 `json:"name,omitempty"`
 	OptimizationGoal             string                 `json:"optimization_goal,omitempty"`
 	PacingType                   []string               `json:"pacing_type,omitempty"`
+	PlacementSoftOptOut          []string               `json:"placement_soft_opt_out,omitempty"`
 	PromotedObject               *PromotedObject        `json:"promoted_object,omitempty"`
 	RecurringBudgetSemantics     bool                   `json:"recurring_budget_semantics,omitempty"`
 	StartTime                    fb.Time                `json:"start_time,omitempty"`
@@ -251,11 +252,24 @@ type Targeting struct {
 	DevicePlatforms             []string                 `json:"device_platforms,omitempty"`
 	ExcludedPublisherCategories []string                 `json:"excluded_publisher_categories,omitempty"`
 	Locales                     []int                    `json:"locales,omitempty"`
+	TargetingAutomation         *TargetingAutomation     `json:"targeting_automation,omitempty"`
 	TargetingOptimization       string                   `json:"targeting_optimization,omitempty"`
 	UserDevice                  []string                 `json:"user_device,omitempty"`
 	UserOs                      []string                 `json:"user_os,omitempty"`
 	WirelessCarrier             []string                 `json:"wireless_carrier,omitempty"`
 	TargetingRelaxationTypes    TargetingRelaxationTypes `json:"targeting_relaxation_types,omitempty"`
+}
+
+// TargetingAutomation allows age and gender settings to be used as suggestions (v23.0+)
+type TargetingAutomation struct {
+	AdvantageAudience  int8               `json:"advantage_audience,omitempty"`
+	IndividualSetting  *IndividualSetting `json:"individual_setting,omitempty"`
+}
+
+// IndividualSetting contains age and gender suggestion settings (v23.0+)
+type IndividualSetting struct {
+	Age    int8 `json:"age,omitempty"`
+	Gender int8 `json:"gender,omitempty"`
 }
 
 // Advantage custom audience and Advantage lookalike can be enabled or disabled.
