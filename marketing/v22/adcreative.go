@@ -174,6 +174,7 @@ var Adcreativefields = []string{
 	"thumbnail_url",
 	"title",
 	"video_id",
+	"asset_feed_spec",
 }
 
 // AdCreative https://developers.facebook.com/docs/marketing-api/reference/ad-creative
