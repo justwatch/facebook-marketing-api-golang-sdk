@@ -620,7 +620,7 @@ type AssetFeedSpecLinkURL struct {
 // AssetCustomizationRule defines which assets to use for specific placements
 type AssetCustomizationRule struct {
 	// Specification of which placements this rule applies to
-	CustomizationSpec *PlacementCustomizationSpec `json:"customization_spec,omitempty"`
+	CustomizationSpec PlacementCustomizationSpec `json:"customization_spec"`
 	// Label of the image to use (references AssetFeedSpecImage.AdLabel)
 	ImageLabel *AssetLabel `json:"image_label,omitempty"`
 	// Label of the video to use (references AssetFeedSpecVideo.AdLabel)
