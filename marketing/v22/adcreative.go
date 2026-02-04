@@ -174,6 +174,7 @@ var Adcreativefields = []string{
 	"thumbnail_url",
 	"title",
 	"video_id",
+	"asset_feed_spec",
 }
 
 // AdCreative https://developers.facebook.com/docs/marketing-api/reference/ad-creative
@@ -269,6 +270,8 @@ type AdCreative struct {
 	Adlabels []json.RawMessage `json:"adlabels,omitempty"`
 	// DegreesOfFreedomSpec Specifies the types of transformations that are enabled for the given creative. For more information, see Ad Creative Degrees Of Freedom Spec, Reference.
 	DegreesOfFreedomSpec *DegreesOfFreedomSpec `json:"degrees_of_freedom_spec,omitempty"`
+	// AssetFeedSpec for dynamic creative or placement-specific asset customization
+	AssetFeedSpec *AssetFeedSpec `json:"asset_feed_spec,omitempty"`
 }
 
 type adCreativeContainer struct {
@@ -556,4 +559,103 @@ type IosAppLink struct {
 	AppStoreID string `json:"app_store_id,omitempty"`
 	// The native iOS URL that will be navigated to.
 	URL string `json:"url,omitempty"`
+}
+
+// AssetFeedSpec defines different creative assets for dynamic ads or placement-specific customization
+// See https://developers.facebook.com/docs/marketing-api/reference/ad-asset-feed-spec/
+type AssetFeedSpec struct {
+	// Videos to use in the ad
+	Videos []AssetFeedSpecVideo `json:"videos,omitempty"`
+	// Images to use in the ad
+	Images []AssetFeedSpecImage `json:"images,omitempty"`
+	// Body text options
+	Bodies []AssetFeedSpecTextAsset `json:"bodies,omitempty"`
+	// Title/headline options
+	Titles []AssetFeedSpecTextAsset `json:"titles,omitempty"`
+	// Description options
+	Descriptions []AssetFeedSpecTextAsset `json:"descriptions,omitempty"`
+	// Link URLs
+	LinkURLs []AssetFeedSpecLinkURL `json:"link_urls,omitempty"`
+	// API expects: ["LEARN_MORE", "SHOP_NOW"], NOT objects.
+	CallToActionTypes []string `json:"call_to_action_types,omitempty"`
+	// Ad formats to generate
+	AdFormats []string `json:"ad_formats,omitempty"`
+	// Rules for customizing assets per placement
+	AssetCustomizationRules []AssetCustomizationRule `json:"asset_customization_rules,omitempty"`
+	// Optimization type: DEGREES_OF_FREEDOM (DOF) or ASSET_FEED_STANDARD or ASSET_CUSTOMIZATION
+	OptimizationType string `json:"optimization_type,omitempty"`
+}
+
+// AssetFeedSpecVideo represents a video asset in the asset feed
+type AssetFeedSpecVideo struct {
+	VideoID       string       `json:"video_id,omitempty"`
+	URLTags       string       `json:"url_tags,omitempty"`
+	ThumbnailHash string       `json:"thumbnail_hash,omitempty"`
+	ThumbnailURL  string       `json:"thumbnail_url,omitempty"`
+	AdLabels      []AssetLabel `json:"adlabels,omitempty"`
+}
+
+// AssetFeedSpecImage represents an image asset in the asset feed
+type AssetFeedSpecImage struct {
+	Hash     string       `json:"hash,omitempty"`
+	URL      string       `json:"url,omitempty"`
+	URLTags  string       `json:"url_tags,omitempty"`
+	AdLabels []AssetLabel `json:"adlabels,omitempty"`
+}
+
+// AssetFeedSpecTextAsset represents a text asset (body, title, description)
+type AssetFeedSpecTextAsset struct {
+	Text     string       `json:"text,omitempty"`
+	URLTags  string       `json:"url_tags,omitempty"`
+	AdLabels []AssetLabel `json:"adlabels,omitempty"`
+}
+
+// AssetFeedSpecLinkURL represents a link URL asset
+type AssetFeedSpecLinkURL struct {
+	WebsiteURL string       `json:"website_url,omitempty"`
+	DisplayURL string       `json:"display_url,omitempty"`
+	Deeplink   string       `json:"deeplink,omitempty"`
+	AdLabels   []AssetLabel `json:"adlabels,omitempty"`
+}
+
+// AssetCustomizationRule defines which assets to use for specific placements
+type AssetCustomizationRule struct {
+	// Specification of which placements this rule applies to
+	CustomizationSpec PlacementCustomizationSpec `json:"customization_spec"`
+	// Label of the image to use (references AssetFeedSpecImage.AdLabel)
+	ImageLabel *AssetLabel `json:"image_label,omitempty"`
+	// Label of the video to use (references AssetFeedSpecVideo.AdLabel)
+	VideoLabel *AssetLabel `json:"video_label,omitempty"`
+	// Label of the body text to use
+	BodyLabel *AssetLabel `json:"body_label,omitempty"`
+	// Label of the title to use
+	TitleLabel *AssetLabel `json:"title_label,omitempty"`
+	// Label of the description to use
+	DescriptionLabel *AssetLabel `json:"description_label,omitempty"`
+	// Label of the link URL to use
+	LinkURLLabel *AssetLabel `json:"link_url_label,omitempty"`
+	// Label of the CTA to use
+	CallToActionTypeLabel *AssetLabel `json:"call_to_action_type_label,omitempty"`
+	// Priority of this rule (higher = more important)
+	Priority int `json:"priority,omitempty"`
+}
+
+// PlacementCustomizationSpec specifies which placements a customization rule applies to
+type PlacementCustomizationSpec struct {
+	// Publisher platforms: facebook, instagram, audience_network, messenger
+	PublisherPlatforms []string `json:"publisher_platforms,omitempty"`
+	// Facebook positions: feed, right_hand_column, instant_article, marketplace, video_feeds, story, search, instream_video, facebook_reels
+	FacebookPositions []string `json:"facebook_positions,omitempty"`
+	// Instagram positions: stream, story, explore, reels, profile_feed, ig_search, profile_reels
+	InstagramPositions []string `json:"instagram_positions,omitempty"`
+	// Audience network positions: classic, rewarded_video
+	AudienceNetworkPositions []string `json:"audience_network_positions,omitempty"`
+	// Messenger positions: messenger_home, story, sponsored_messages
+	MessengerPositions []string `json:"messenger_positions,omitempty"`
+}
+
+// AssetLabel references an asset by its label
+type AssetLabel struct {
+	// The label name that matches an asset's AdLabel field
+	Name string `json:"name,omitempty"`
 }
