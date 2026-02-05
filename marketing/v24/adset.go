@@ -262,8 +262,8 @@ type Targeting struct {
 
 // TargetingAutomation allows age and gender settings to be used as suggestions (v23.0+)
 type TargetingAutomation struct {
-	AdvantageAudience  int8               `json:"advantage_audience,omitempty"`
-	IndividualSetting  *IndividualSetting `json:"individual_setting,omitempty"`
+	AdvantageAudience int8               `json:"advantage_audience"` // 0 = disabled, 1 = enabled
+	IndividualSetting *IndividualSetting `json:"individual_setting,omitempty"`
 }
 
 // IndividualSetting contains age and gender suggestion settings (v23.0+)
