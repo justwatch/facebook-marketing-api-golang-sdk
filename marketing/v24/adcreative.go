@@ -1,4 +1,4 @@
-package v22
+package v24
 
 import (
 	"context"
@@ -154,6 +154,7 @@ var Adcreativefields = []string{
 	"account_id",
 	"body", // The body of the ad. Not supported for video post creatives.
 	"call_to_action_type",
+	"destination_spec",
 	"effective_instagram_media_id",
 	"effective_object_story_id",
 	"image_hash",
@@ -272,6 +273,8 @@ type AdCreative struct {
 	DegreesOfFreedomSpec *DegreesOfFreedomSpec `json:"degrees_of_freedom_spec,omitempty"`
 	// AssetFeedSpec for dynamic creative or placement-specific asset customization
 	AssetFeedSpec *AssetFeedSpec `json:"asset_feed_spec,omitempty"`
+	// DestinationSpec for website destination optimization (v24.0+)
+	DestinationSpec json.RawMessage `json:"destination_spec,omitempty"`
 }
 
 type adCreativeContainer struct {
@@ -621,7 +624,7 @@ type AssetFeedSpecLinkURL struct {
 // AssetCustomizationRule defines which assets to use for specific placements
 type AssetCustomizationRule struct {
 	// Specification of which placements this rule applies to
-	CustomizationSpec PlacementCustomizationSpec `json:"customization_spec"`
+	CustomizationSpec PlacementCustomizationSpec `json:"customization_spec,omitempty"`
 	// Label of the image to use (references AssetFeedSpecImage.AdLabel)
 	ImageLabel *AssetLabel `json:"image_label,omitempty"`
 	// Label of the video to use (references AssetFeedSpecVideo.AdLabel)
