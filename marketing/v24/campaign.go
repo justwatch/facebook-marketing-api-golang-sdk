@@ -212,28 +212,28 @@ var campaignFieldsShort = []string{
 
 // Campaign from https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group
 type Campaign struct {
-	AccountID                     string              `json:"account_id,omitempty"`
-	AdvantageStateInfo            *AdvantageStateInfo `json:"advantage_state_info,omitempty"`
-	BuyingType                    string              `json:"buying_type,omitempty"`
-	CampaignGroupID               string              `json:"campaign_group_id,omitempty"`
-	BidStrategy                   string              `json:"bid_strategy,omitempty"`
-	BidAmount                     uint64              `json:"bid_amount,omitempty"`
-	CanUseSpendCap                bool                `json:"can_use_spend_cap,omitempty"`
-	ConfiguredStatus              string              `json:"configured_status,omitempty"`
-	CreatedTime                   string              `json:"created_time,omitempty"`
-	DailyBudget                   uint64              `json:"daily_budget,omitempty,string"`
-	EffectiveStatus               string              `json:"effective_status,omitempty"`
-	ID                            string              `json:"id,omitempty"`
-	IsAdsetBudgetSharingEnabled   bool                `json:"is_adset_budget_sharing_enabled,omitempty"`
-	LifeTimeBudget                uint64              `json:"lifetime_budget,omitempty,string"`
-	Name                          string              `json:"name,omitempty"`
-	Objective                     string              `json:"objective,omitempty"`
-	SpendCap                      uint64              `json:"spend_cap,omitempty,string"`
-	StartTime                     fb.Time             `json:"start_time,omitempty"`
-	Status                        string              `json:"status,omitempty"`
-	StopTime                      fb.Time             `json:"stop_time,omitempty"`
-	UpdatedTime                   fb.Time             `json:"updated_time,omitempty"`
-	SpecialAdCategories           []string            `json:"special_ad_categories,omitempty"`
+	AccountID                   string              `json:"account_id,omitempty"`
+	AdvantageStateInfo          *AdvantageStateInfo `json:"advantage_state_info,omitempty"`
+	BuyingType                  string              `json:"buying_type,omitempty"`
+	CampaignGroupID             string              `json:"campaign_group_id,omitempty"`
+	BidStrategy                 string              `json:"bid_strategy,omitempty"`
+	BidAmount                   uint64              `json:"bid_amount,omitempty"`
+	CanUseSpendCap              bool                `json:"can_use_spend_cap,omitempty"`
+	ConfiguredStatus            string              `json:"configured_status,omitempty"`
+	CreatedTime                 string              `json:"created_time,omitempty"`
+	DailyBudget                 uint64              `json:"daily_budget,omitempty,string"`
+	EffectiveStatus             string              `json:"effective_status,omitempty"`
+	ID                          string              `json:"id,omitempty"`
+	IsAdsetBudgetSharingEnabled bool                `json:"is_adset_budget_sharing_enabled"`
+	LifeTimeBudget              uint64              `json:"lifetime_budget,omitempty,string"`
+	Name                        string              `json:"name,omitempty"`
+	Objective                   string              `json:"objective,omitempty"`
+	SpendCap                    uint64              `json:"spend_cap,omitempty,string"`
+	StartTime                   fb.Time             `json:"start_time,omitempty"`
+	Status                      string              `json:"status,omitempty"`
+	StopTime                    fb.Time             `json:"stop_time,omitempty"`
+	UpdatedTime                 fb.Time             `json:"updated_time,omitempty"`
+	SpecialAdCategories         []string            `json:"special_ad_categories,omitempty"`
 }
 
 // AdvantageStateInfo contains read-only information about a campaign's automation state (v23.0+)
