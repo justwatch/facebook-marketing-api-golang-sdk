@@ -450,10 +450,11 @@ type CustomAudience struct {
 
 // LookalikeSpec contains the metadata of lookalike audiences.
 type LookalikeSpec struct {
-	Country string             `json:"country,omitempty"`
-	Origin  []LookalikeOrigion `json:"origin,omitempty"`
-	Ratio   float64            `json:"ratio,omitempty"`
-	Type    string             `json:"type,omitempty"`
+	Country       string             `json:"country,omitempty"`
+	Origin        []LookalikeOrigion `json:"origin,omitempty"`
+	Ratio         float64            `json:"ratio,omitempty"`
+	Type          string             `json:"type,omitempty"`
+	StartingRatio float64            `json:"starting_ratio,omitempty"`
 }
 
 // LocationSpec ...
