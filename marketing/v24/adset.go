@@ -195,7 +195,7 @@ type Adset struct {
 	Name                         string                 `json:"name,omitempty"`
 	OptimizationGoal             string                 `json:"optimization_goal,omitempty"`
 	PacingType                   []string               `json:"pacing_type,omitempty"`
-	PlacementSoftOptOut          []string               `json:"placement_soft_opt_out,omitempty"`
+	PlacementSoftOptOut          *PlacementSoftOptOut   `json:"placement_soft_opt_out,omitempty"`
 	PromotedObject               *PromotedObject        `json:"promoted_object,omitempty"`
 	RecurringBudgetSemantics     bool                   `json:"recurring_budget_semantics,omitempty"`
 	StartTime                    fb.Time                `json:"start_time,omitempty"`
@@ -208,6 +208,15 @@ type Adset struct {
 	InstagramUserID              string                 `json:"instagram_user_id,omitempty"`
 	RegionalRegulatedCategories  []string               `json:"regional_regulated_categories,omitempty"`
 	RegionalRegulationIdentities map[string]string      `json:"regional_regulation_identities,omitempty"`
+}
+
+// PlacementSoftOptOut contains placement positions to opt out of.
+type PlacementSoftOptOut struct {
+	FacebookPositions        []string `json:"facebook_positions,omitempty"`
+	AudienceNetworkPositions []string `json:"audience_network_positions,omitempty"`
+	InstagramPositions       []string `json:"instagram_positions,omitempty"`
+	ThreadsPositions         []string `json:"threads_positions,omitempty"`
+	MessengerPositions       []string `json:"messenger_positions,omitempty"`
 }
 
 // FrequencyControlSpec controls the frequency of an adset.
