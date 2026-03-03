@@ -326,6 +326,17 @@ func (rb *RouteBuilder) TargetingOptionList(s ...string) *RouteBuilder {
 	return rb
 }
 
+// IDList sets the id_list param or deletes it.
+func (rb *RouteBuilder) IDList(ids ...string) *RouteBuilder {
+	if len(ids) > 0 {
+		rb.v.Set("id_list", `["`+strings.Join(ids, `","`)+`"]`)
+	} else {
+		rb.v.Del("id_list")
+	}
+
+	return rb
+}
+
 // String implements fmt.Stringer and returns the finished url.
 func (rb *RouteBuilder) String() string {
 	if rb.err != nil {
