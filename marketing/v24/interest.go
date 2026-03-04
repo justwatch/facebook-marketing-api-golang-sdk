@@ -28,15 +28,17 @@ func (is *InterestService) Search(ctx context.Context, query string, limit int) 
 	return res, nil
 }
 
-// TargetingSearch searches for a targeting.
-func (is *InterestService) TargetingSearch(ctx context.Context, act string, query string) ([]InterestTargeting, error) {
+// TargetingSearch searches for a targeting. limitType filters results by targeting category
+// (e.g. "interests", "behaviors", "keywords", etc.).
+// https://developers.facebook.com/docs/marketing-api/reference/ad-account/targetingsearch/
+func (is *InterestService) TargetingSearch(ctx context.Context, act, query, limitType string) ([]InterestTargeting, error) {
 	query = strings.TrimSpace(query)
 	if query == "" {
 		return []InterestTargeting{}, nil
 	}
 
 	res := []InterestTargeting{}
-	err := is.c.GetList(ctx, fb.NewRoute(Version, "/act_%s/targetingsearch", act).Q(query).String(), &res)
+	err := is.c.GetList(ctx, fb.NewRoute(Version, "/act_%s/targetingsearch", act).LimitType(limitType).Q(query).Fields("id", "name", "audience_size_upper_bound", "type", "path").String(), &res)
 	if err != nil {
 		return nil, err
 	}
