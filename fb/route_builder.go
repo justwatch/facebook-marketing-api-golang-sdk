@@ -59,6 +59,17 @@ func (rb *RouteBuilder) Type(s string) *RouteBuilder {
 	return rb
 }
 
+// LimitType sets the limit_type param.
+func (rb *RouteBuilder) LimitType(s string) *RouteBuilder {
+	if s != "" {
+		rb.v.Set("limit_type", s)
+	} else {
+		rb.v.Del("limit_type")
+	}
+
+	return rb
+}
+
 // Class sets the type param.
 func (rb *RouteBuilder) Class(s string) *RouteBuilder {
 	if s != "" {
