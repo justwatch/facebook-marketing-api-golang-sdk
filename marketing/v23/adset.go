@@ -118,7 +118,7 @@ func (as *AdsetService) Delete(ctx context.Context, id string) error {
 }
 
 // CopyAsync copies an adset using async batch.
-func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAdsetAsyncBatchResult, error) {
+func (as *AdsetService) CopyAsync(ctx context.Context, id string, body string) (*fb.CopiedAdsetAsyncBatchResult, error) {
 	if id == "" {
 		return nil, errors.New("cannot copy adset without id")
 	}
@@ -131,7 +131,7 @@ func (as *AdsetService) CopyAsync(ctx context.Context, id string) (*fb.CopiedAds
 				Method:      "POST",
 				RelativeURL: fmt.Sprintf("%s/copies", id),
 				Name:        fmt.Sprintf("%s_copy", id),
-				Body:        "deep_copy=true",
+				Body:        body,
 			},
 		},
 	}
