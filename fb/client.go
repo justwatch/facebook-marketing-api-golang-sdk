@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,31 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 )
+
+// reduceLimit parses the URL, halves the limit query parameter, and returns the modified URL.
+// Returns false if the limit is already at 1 or not present.
+func reduceLimit(rawURL string) (string, bool) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", false
+	}
+
+	q := u.Query()
+	limitStr := q.Get("limit")
+	if limitStr == "" {
+		return "", false
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 1 {
+		return "", false
+	}
+
+	q.Set("limit", strconv.Itoa(limit/2))
+	u.RawQuery = q.Encode()
+
+	return u.String(), true
+}
 
 // Client holds an http.Client and provides additional functionality.
 type Client struct {
@@ -101,12 +127,18 @@ func (c *Client) GetJSON(ctx context.Context, url string, res interface{}) error
 }
 
 // GetList uses reflection to append to res when the result is a list.
-func (c *Client) GetList(ctx context.Context, url string, res interface{}) error {
+func (c *Client) GetList(ctx context.Context, u string, res interface{}) error {
 	stats := StatFromContext(ctx)
-	for url != "" {
+	for u != "" {
 		resp := &listResponse{}
-		err := c.GetJSON(ctx, url, resp)
+		err := c.GetJSON(ctx, u, resp)
 		if err != nil {
+			if IsReduceData(err) {
+				if reduced, ok := reduceLimit(u); ok {
+					u = reduced
+					continue
+				}
+			}
 			return err
 		}
 
@@ -119,19 +151,25 @@ func (c *Client) GetList(ctx context.Context, url string, res interface{}) error
 			stats.Add(uint64(n))
 		}
 
-		url = resp.Paging.Paging.Next
+		u = resp.Paging.Paging.Next
 	}
 
 	return nil
 }
 
 // ReadList writes json.RawMessage to a chan when the response is a list.
-func (c *Client) ReadList(ctx context.Context, url string, res chan<- json.RawMessage) error {
+func (c *Client) ReadList(ctx context.Context, u string, res chan<- json.RawMessage) error {
 	stats := StatFromContext(ctx)
-	for url != "" {
+	for u != "" {
 		resp := &listElementsResponse{}
-		err := c.GetJSON(ctx, url, resp)
+		err := c.GetJSON(ctx, u, resp)
 		if err != nil {
+			if IsReduceData(err) {
+				if reduced, ok := reduceLimit(u); ok {
+					u = reduced
+					continue
+				}
+			}
 			return err
 		}
 
@@ -143,7 +181,7 @@ func (c *Client) ReadList(ctx context.Context, url string, res chan<- json.RawMe
 			stats.Add(uint64(len(resp.Data)))
 		}
 
-		url = resp.Paging.Paging.Next
+		u = resp.Paging.Paging.Next
 	}
 
 	return nil

@@ -3,6 +3,7 @@ package fb
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 // ErrorContainer is a convenient type for embedding in other structs.
@@ -53,6 +54,19 @@ func IsNotFound(err error) bool {
 	}
 
 	return e.Code == 100 && e.ErrorSubcode == 33
+}
+
+// IsReduceData returns whether the error is a Facebook error asking to reduce the amount of data requested.
+func IsReduceData(err error) bool {
+	e, ok := err.(*Error)
+	if !ok {
+		return false
+	}
+	if e == nil {
+		return false
+	}
+
+	return e.Code == 1 && strings.Contains(e.Message, "reduce the amount of data")
 }
 
 // Error implements error.
