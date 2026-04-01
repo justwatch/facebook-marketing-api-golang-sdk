@@ -107,7 +107,7 @@ func (s *AdCreativeService) ListOfCampaign(campaignID string, fields []string) *
 	}
 	return &AdCreativeListCall{
 		c:            s.c,
-		RouteBuilder: fb.NewRoute(Version, "/%s/ads", campaignID).Limit(adCreativeReadListLimit).Fields(fmt.Sprintf("adcreatives{%v}", strings.Join(fields, ","))),
+		RouteBuilder: fb.NewRoute(Version, "/%s/ads", campaignID).Limit(10).Fields(fmt.Sprintf("adcreatives{%v}", strings.Join(fields, ","))),
 	}
 }
 
