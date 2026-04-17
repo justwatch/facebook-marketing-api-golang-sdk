@@ -166,6 +166,17 @@ func (rb *RouteBuilder) TimeRange(minDate, maxDate time.Time) *RouteBuilder {
 	return rb
 }
 
+// Since sets the since param (unix timestamp) or deletes it when t is zero.
+func (rb *RouteBuilder) Since(t time.Time) *RouteBuilder {
+	if t.IsZero() {
+		rb.v.Del("since")
+	} else {
+		rb.v.Set("since", strconv.FormatInt(t.Unix(), 10))
+	}
+
+	return rb
+}
+
 // DatePreset sets date_preset param and deletes the time_range one.
 func (rb *RouteBuilder) DatePreset(s string) *RouteBuilder {
 	if s != "" {

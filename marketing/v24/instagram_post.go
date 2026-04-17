@@ -51,6 +51,30 @@ func (ps *PostService) ListInstagramPosts(ctx context.Context, igUserID string, 
 	return count, nil
 }
 
+// ListOfInstagramUser returns an InstagramPostListCall for listing media of an IG user.
+func (ps *PostService) ListOfInstagramUser(igUserID string) *InstagramPostListCall {
+	return &InstagramPostListCall{
+		RouteBuilder: fb.NewRoute(Version, "/%s/media", igUserID).Fields(instaPostFields...).Limit(100),
+		c:            ps.c,
+	}
+}
+
+// InstagramPostListCall is used for listing media posts of an IG user.
+type InstagramPostListCall struct {
+	*fb.RouteBuilder
+	c *fb.Client
+}
+
+// Do calls the graph API and returns all matching posts as a slice.
+func (ilc *InstagramPostListCall) Do(ctx context.Context) ([]InstagramPost, error) {
+	res := []InstagramPost{}
+	if err := ilc.c.GetList(ctx, ilc.RouteBuilder.String(), &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (ps *PostService) GetInstagramPost(ctx context.Context, postID string) (*InstagramPost, error) {
 	res := InstagramPost{}
 	err := ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", postID).Fields(instaPostFields...).String(), &res)
