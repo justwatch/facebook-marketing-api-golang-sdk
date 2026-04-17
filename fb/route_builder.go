@@ -166,6 +166,20 @@ func (rb *RouteBuilder) TimeRange(minDate, maxDate time.Time) *RouteBuilder {
 	return rb
 }
 
+// Since sets the since query parameter (unix timestamp) — returns only
+// records whose timestamp is at or after t. Clears the param when t is zero.
+// Honored by feed-style endpoints like /{ig_user_id}/media; ignored by
+// endpoints that don't support cursor-based time filtering.
+func (rb *RouteBuilder) Since(t time.Time) *RouteBuilder {
+	if t.IsZero() {
+		rb.v.Del("since")
+	} else {
+		rb.v.Set("since", strconv.FormatInt(t.Unix(), 10))
+	}
+
+	return rb
+}
+
 // DatePreset sets date_preset param and deletes the time_range one.
 func (rb *RouteBuilder) DatePreset(s string) *RouteBuilder {
 	if s != "" {
