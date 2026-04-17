@@ -51,9 +51,7 @@ func (ps *PostService) ListInstagramPosts(ctx context.Context, igUserID string, 
 	return count, nil
 }
 
-// ListOfInstagramUser returns a builder for listing media posts of an IG
-// user. Chain builder methods (Since, Limit, Filtering, Fields…) and call
-// Do to execute.
+// ListOfInstagramUser returns an InstagramPostListCall for listing media of an IG user.
 func (ps *PostService) ListOfInstagramUser(igUserID string) *InstagramPostListCall {
 	return &InstagramPostListCall{
 		RouteBuilder: fb.NewRoute(Version, "/%s/media", igUserID).Fields(instaPostFields...).Limit(100),
