@@ -271,6 +271,9 @@ type AdCreative struct {
 	Adlabels []json.RawMessage `json:"adlabels,omitempty"`
 	// DegreesOfFreedomSpec Specifies the types of transformations that are enabled for the given creative. For more information, see Ad Creative Degrees Of Freedom Spec, Reference.
 	DegreesOfFreedomSpec *DegreesOfFreedomSpec `json:"degrees_of_freedom_spec,omitempty"`
+	// ContextualMultiAds controls whether the ad can appear in multi-advertiser ad units.
+	// See https://developers.facebook.com/docs/marketing-api/creative/multi-advertiser-ads/
+	ContextualMultiAds *EnrollStatus `json:"contextual_multi_ads,omitempty"`
 	// AssetFeedSpec for dynamic creative or placement-specific asset customization
 	AssetFeedSpec *AssetFeedSpec `json:"asset_feed_spec,omitempty"`
 	// DestinationSpec for website destination optimization (v24.0+)
