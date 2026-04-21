@@ -97,7 +97,45 @@ func (vs *VideoService) ReadList(ctx context.Context, act string, res chan<- Vid
 	return wg.Wait()
 }
 
+// Thumbnails returns the thumbnails edge for a video
+// (GET /{video_id}/thumbnails). Unlike Video.Picture — which can return
+// Facebook's generic placeholder while the video is still processing — this
+// endpoint returns extracted frames with an explicit is_preferred flag.
+func (vs *VideoService) Thumbnails(ctx context.Context, videoID string) ([]VideoThumbnail, error) {
+	res := &videoThumbnailsResponse{}
+	err := vs.c.GetJSON(
+		ctx,
+		fb.NewRoute(Version, "/%s/thumbnails", videoID).Fields(videoThumbnailFields...).String(),
+		res,
+	)
+	if err != nil {
+		if fb.IsNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return res.Data, nil
+}
+
 var advideoFields = []string{"title", "id", "picture", "description", "from", "format", "length", "status"}
+
+var videoThumbnailFields = []string{"id", "uri", "is_preferred", "height", "width", "scale"}
+
+// VideoThumbnail represents a single entry on the /{video_id}/thumbnails edge.
+type VideoThumbnail struct {
+	ID          string  `json:"id"`
+	URI         string  `json:"uri"`
+	IsPreferred bool    `json:"is_preferred"`
+	Height      int     `json:"height"`
+	Width       int     `json:"width"`
+	Scale       float64 `json:"scale"`
+}
+
+type videoThumbnailsResponse struct {
+	Data []VideoThumbnail `json:"data"`
+}
 
 type uploadVideoRequestStart struct {
 	UploadPhase string `json:"upload_phase"`
