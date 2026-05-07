@@ -1,8 +1,12 @@
 package fb
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/cenk/backoff"
@@ -37,7 +41,21 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 		if e != nil {
 			return e
 		} else if resp.StatusCode >= 500 {
+			body, readErr := io.ReadAll(resp.Body)
 			resp.Body.Close()
+			if readErr != nil {
+				return fmt.Errorf("unexpected status %s from facebook, attempt %d", resp.Status, attempt)
+			}
+
+			ec := &ErrorContainer{}
+			if jsonErr := json.Unmarshal(body, ec); jsonErr == nil &&
+				ec.Error != nil &&
+				ec.Error.Code == 1 &&
+				strings.Contains(ec.Error.Message, "reduce the amount of data") {
+				resp.Body = io.NopCloser(bytes.NewReader(body))
+
+				return nil
+			}
 
 			return fmt.Errorf("unexpected status %s from facebook, attempt %d", resp.Status, attempt)
 		}
