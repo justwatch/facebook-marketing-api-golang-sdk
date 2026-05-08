@@ -154,6 +154,7 @@ var Adcreativefields = []string{
 	"account_id",
 	"body", // The body of the ad. Not supported for video post creatives.
 	"call_to_action_type",
+	"call_to_action",
 	"destination_spec",
 	"effective_instagram_media_id",
 	"effective_object_story_id",
