@@ -30,8 +30,47 @@ func (vs *VideoService) Get(ctx context.Context, id string) (*Video, error) {
 	return res, nil
 }
 
-// Upload uploads a video from r into an account.
+// Upload uploads a video from r into an account and returns the video with the
+// fields listed in advideoFields populated.
+//
+// The trailing Get happens immediately after the upload finishes, while Meta
+// is still asynchronously rendering format variants. Requesting `format` (and
+// to a lesser extent `picture`) at that moment can trip Meta's response-size
+// guard and return "Please reduce the amount of data you're asking for".
+// Callers that only need the resulting video ID should prefer
+// UploadWithoutFetch.
 func (vs *VideoService) Upload(ctx context.Context, act, title string, size int64, r io.Reader) (*Video, error) {
+	videoID, err := vs.uploadChunks(ctx, act, title, size, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return vs.Get(ctx, videoID)
+}
+
+// UploadWithoutFetch uploads a video from r into an account and returns a
+// minimally populated Video containing only the resulting ID. It skips the
+// trailing fields fetch that Upload performs, avoiding "Please reduce the
+// amount of data you're asking for" errors that Meta intermittently returns
+// while a freshly uploaded video is still being transcoded.
+//
+// Use this when the caller only needs the video ID (e.g. to attach the asset
+// to a creative). Callers that need title/picture/format/etc. should either
+// use Upload or call Get separately, after Meta has had time to finish
+// encoding.
+func (vs *VideoService) UploadWithoutFetch(ctx context.Context, act, title string, size int64, r io.Reader) (*Video, error) {
+	videoID, err := vs.uploadChunks(ctx, act, title, size, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Video{ID: videoID}, nil
+}
+
+// uploadChunks runs the start/transfer/finish chunked-upload protocol and
+// returns the resulting video ID. Meta returns video_id in the start-phase
+// response, so we already have it before the chunked transfer even begins.
+func (vs *VideoService) uploadChunks(ctx context.Context, act, title string, size int64, r io.Reader) (string, error) {
 	url := fb.NewRoute(Version, "/act_%s/advideos", act).String()
 
 	res := uploadVideoResponse{}
@@ -40,7 +79,7 @@ func (vs *VideoService) Upload(ctx context.Context, act, title string, size int6
 		FileSize:    size,
 	}, &res)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	for size > 0 {
@@ -55,7 +94,7 @@ func (vs *VideoService) Upload(ctx context.Context, act, title string, size int6
 			"start_offset":      fmt.Sprintf("%d", res.StartOffset),
 		}, &res)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
@@ -66,10 +105,10 @@ func (vs *VideoService) Upload(ctx context.Context, act, title string, size int6
 		Title:           title,
 	}, &fr)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return vs.Get(ctx, res.VideoID)
+	return res.VideoID, nil
 }
 
 // ReadList returns all videos from an account and writes them to a channel.
