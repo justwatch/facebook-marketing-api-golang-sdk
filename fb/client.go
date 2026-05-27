@@ -49,15 +49,26 @@ type Client struct {
 	*http.Client
 }
 
-// NewClient returns a http.Client containing a special transport with injects the version, token, and clientkey.
+// NewClient returns a client with default rate-limit header handling enabled.
 func NewClient(l log.Logger, token, clientKey string) *Client {
+	return NewClientWithConfig(l, token, clientKey, defaultRateLimitConfig())
+}
+
+// NewClientWithConfig returns a client with the given rate-limit configuration.
+// Set cfg.Enabled = false to disable header-based throttling.
+func NewClientWithConfig(l log.Logger, token, clientKey string, cfg RateLimitConfig) *Client {
 	if l == nil {
 		l = log.NewNopLogger()
 	}
 
+	state := newRateLimitState(cfg)
+	transport := newTokenTransport(token, clientKey,
+		newRetryTransport(newRateLimitTransport(l, state, nil), state),
+	)
+
 	return &Client{
 		l:      l,
-		Client: &http.Client{Transport: newTokenTransport(token, clientKey, newRetryTransport(newLogAppUsageTransport(l, nil)))},
+		Client: &http.Client{Transport: transport},
 	}
 }
 
