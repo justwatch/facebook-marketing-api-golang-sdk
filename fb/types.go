@@ -56,6 +56,31 @@ func IsNotFound(err error) bool {
 	return e.Code == 100 && e.ErrorSubcode == 33
 }
 
+// IsRateLimited returns whether err is a Meta rate-limit or throttle error.
+// Detection is based on numeric error codes only, not message strings,
+// as Meta explicitly warns that message text may change.
+//
+// Covered codes:
+//   - Platform rate limits: 4, 17 (incl. subcode 2446079), 32, 613 (various subcodes)
+//   - BUC / Marketing API limits: 80000–80014
+func IsRateLimited(err error) bool {
+	e, ok := err.(*Error)
+	if !ok || e == nil {
+		return false
+	}
+
+	switch e.Code {
+	// Platform-level throttle codes
+	case 4, 17, 32, 613:
+		return true
+	// BUC / Marketing API throttle codes
+	case 80000, 80001, 80002, 80003, 80004, 80005, 80006, 80008, 80009, 80014:
+		return true
+	}
+
+	return false
+}
+
 // IsReduceData returns whether the error is a Facebook error asking to reduce the amount of data requested.
 func IsReduceData(err error) bool {
 	e, ok := err.(*Error)

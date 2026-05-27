@@ -33,7 +33,17 @@ type Service struct {
 
 // New initializes a new Service and all the Services contained.
 func New(l log.Logger, accessToken, appSecret string) (*Service, error) {
-	c := fb.NewClient(l, accessToken, appSecret)
+	return NewWithClient(l, fb.NewClient(l, accessToken, appSecret))
+}
+
+// NewWithConfig initializes a new Service with the given rate-limit configuration.
+func NewWithConfig(l log.Logger, accessToken, appSecret string, cfg fb.RateLimitConfig) (*Service, error) {
+	return NewWithClient(l, fb.NewClientWithConfig(l, accessToken, appSecret, cfg))
+}
+
+// NewWithClient initializes a new Service using a pre-configured fb.Client.
+// The client is validated by making a /me call.
+func NewWithClient(l log.Logger, c *fb.Client) (*Service, error) {
 	err := c.GetJSON(context.Background(), fb.NewRoute(Version, "/me").String(), &struct{}{})
 	if err != nil {
 		return nil, err
