@@ -233,7 +233,7 @@ type Campaign struct {
 	Status                      string              `json:"status,omitempty"`
 	StopTime                    fb.Time             `json:"stop_time,omitempty"`
 	UpdatedTime                 fb.Time             `json:"updated_time,omitempty"`
-	SpecialAdCategories         []string            `json:"special_ad_categories,omitempty"`
+	SpecialAdCategories         []string            `json:"special_ad_categories"`
 }
 
 // AdvantageStateInfo contains read-only information about a campaign's automation state (v23.0+)
