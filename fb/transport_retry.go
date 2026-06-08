@@ -38,6 +38,18 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 		attempt++
 		var e error
 
+		// The same *http.Request is reused across retry attempts and its Body is
+		// consumed by the first RoundTrip. Without restoring it, retried requests
+		// send an empty body, which Meta reports as a misleading "name field is
+		// required" error. Reset the body from GetBody before every attempt.
+		if r.GetBody != nil {
+			body, getBodyErr := r.GetBody()
+			if getBodyErr != nil {
+				return backoff.Permanent(getBodyErr)
+			}
+			r.Body = body
+		}
+
 		resp, e = t.next.RoundTrip(r) // nolint:bodyclose // not a correct linter detection
 
 		if e != nil {

@@ -200,23 +200,20 @@ func (c *Client) ReadList(ctx context.Context, u string, res chan<- json.RawMess
 
 // PostJSON encodes req as JSON into a buffer, sends this as a POST body to the url and parses the response as JSON into res.
 func (c *Client) PostJSON(ctx context.Context, url string, req, res interface{}) error {
-	var r io.Reader
+	var bodyBytes []byte
 	if req != nil {
 		b := &bytes.Buffer{}
 		err := json.NewEncoder(b).Encode(req)
 		if err != nil {
 			return err
 		}
-		r = b
+		bodyBytes = b.Bytes()
 	}
 
-	var debugBuf *bytes.Buffer
-	if r != nil {
-		debugBuf = &bytes.Buffer{}
-		r = io.TeeReader(r, debugBuf)
-	}
-
-	request, err := http.NewRequest(http.MethodPost, url, r)
+	// Pass a *bytes.Reader so http.NewRequest populates GetBody, allowing the
+	// retry transport to replay the body. Anything else (e.g. io.TeeReader)
+	// leaves GetBody nil and retried requests would send an empty body.
+	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return err
 	}
@@ -227,12 +224,7 @@ func (c *Client) PostJSON(ctx context.Context, url string, req, res interface{})
 		return err
 	}
 
-	var b []byte
-	if debugBuf != nil {
-		b = debugBuf.Bytes()
-	}
-
-	return c.handleResponse(resp, res, b)
+	return c.handleResponse(resp, res, bodyBytes)
 }
 
 // Send a Post request encoded as a form.
@@ -256,23 +248,19 @@ func (c *Client) PostForm(ctx context.Context, endpointUrl string, formBody url.
 
 // DeleteJSON sends a DELETE request to url with a body and marshals the response to res.
 func (c *Client) DeleteJSON(ctx context.Context, url string, req, res interface{}) error {
-	var r io.Reader
+	var bodyBytes []byte
 	if req != nil {
 		b := &bytes.Buffer{}
 		err := json.NewEncoder(b).Encode(req)
 		if err != nil {
 			return err
 		}
-		r = b
+		bodyBytes = b.Bytes()
 	}
 
-	var debugBuf *bytes.Buffer
-	if r != nil {
-		debugBuf = &bytes.Buffer{}
-		r = io.TeeReader(r, debugBuf)
-	}
-
-	httpReq, err := http.NewRequest(http.MethodDelete, url, r)
+	// Pass a *bytes.Reader so http.NewRequest populates GetBody, allowing the
+	// retry transport to replay the body on retried requests.
+	httpReq, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return err
 	}
@@ -283,12 +271,7 @@ func (c *Client) DeleteJSON(ctx context.Context, url string, req, res interface{
 		return err
 	}
 
-	var b []byte
-	if debugBuf != nil {
-		b = debugBuf.Bytes()
-	}
-
-	return c.handleResponse(resp, res, b)
+	return c.handleResponse(resp, res, bodyBytes)
 }
 
 // PostValues sends an POST request to the Facebook Graph API.
