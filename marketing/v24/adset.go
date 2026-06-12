@@ -300,6 +300,7 @@ type FlexibleSpec struct {
 	WorkPositions        []IDContainer `json:"work_positions,omitempty"`
 	Politics             []IDContainer `json:"politics,omitempty"`
 	EducationMajors      []IDContainer `json:"education_majors,omitempty"`
+	EducationSchools     []IDContainer `json:"education_schools,omitempty"`
 	EducationStatuses    []int         `json:"education_statuses,omitempty"`
 	RelationshipStatuses []int         `json:"relationship_statuses,omitempty"`
 }
