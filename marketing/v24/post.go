@@ -103,11 +103,7 @@ func (ps *PostService) getPostAttachments(ctx context.Context, post *Post) error
 	sat := strings.TrimSpace(pA.StoryAttachmentType)
 	mt := strings.TrimSpace(pA.MediaType)
 	if mt != "" {
-		if mt == "link" {
-			post.Type = "status"
-		} else {
-			post.Type = mt
-		}
+		post.Type = mt
 	} else if sat != "" {
 		post.Type = sat
 	}
