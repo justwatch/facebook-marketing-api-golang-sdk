@@ -169,45 +169,48 @@ var AdsetFields = []string{
 
 // Adset from https://developers.facebook.com/docs/marketing-api/reference/ad-campaign
 type Adset struct {
-	AccountID                    string                 `json:"account_id,omitempty"`
-	AttributionSpec              json.RawMessage        `json:"attribution_spec,omitempty"`
-	BidAmount                    uint64                 `json:"bid_amount,omitempty"`
-	BidStrategy                  string                 `json:"bid_strategy,omitempty"`
-	BillingEvent                 string                 `json:"billing_event,omitempty"`
-	BudgetRemaining              float64                `json:"budget_remaining,omitempty,string"`
-	Campaign                     *Campaign              `json:"campaign,omitempty"`
-	CampaignID                   string                 `json:"campaign_id,omitempty"`
-	ConfiguredStatus             string                 `json:"configured_status,omitempty"`
-	CreatedTime                  fb.Time                `json:"created_time,omitempty"`
-	DailyBudget                  float64                `json:"daily_budget,omitempty,string"`
-	DailyMinSpendTarget          uint64                 `json:"daily_min_spend_target,omitempty,string"`
-	DailySpendCap                uint64                 `json:"daily_spend_cap,omitempty,string"`
-	DestinationType              string                 `json:"destination_type,omitempty"`
-	DeliveryEstimate             *DeliveryEstimate      `json:"delivery_estimate,omitempty"`
-	EffectiveStatus              string                 `json:"effective_status,omitempty"`
-	EndTime                      *fb.Time               `json:"end_time,omitempty"`
-	FrequencyControlSpecs        []FrequencyControlSpec `json:"frequency_control_specs,omitempty"`
-	ID                           string                 `json:"id,omitempty"`
-	LifetimeBudget               float64                `json:"lifetime_budget,omitempty,string"`
-	LifetimeMinSpendTarget       uint64                 `json:"lifetime_min_spend_target,omitempty,string"`
-	LifeTimeSpendCap             uint64                 `json:"lifetime_spend_cap,omitempty,string"`
-	LifetimeImps                 uint64                 `json:"lifetime_imps,omitempty"`
-	Name                         string                 `json:"name,omitempty"`
-	OptimizationGoal             string                 `json:"optimization_goal,omitempty"`
-	PacingType                   []string               `json:"pacing_type,omitempty"`
-	PlacementSoftOptOut          *PlacementSoftOptOut   `json:"placement_soft_opt_out,omitempty"`
-	PromotedObject               *PromotedObject        `json:"promoted_object,omitempty"`
-	RecurringBudgetSemantics     bool                   `json:"recurring_budget_semantics,omitempty"`
-	StartTime                    *fb.Time               `json:"start_time,omitempty"`
-	Status                       string                 `json:"status,omitempty"`
-	Targeting                    *Targeting             `json:"targeting,omitempty"`
-	UpdatedTime                  fb.Time                `json:"updated_time,omitempty"`
-	TargetingOptimizationTypes   map[string]int32       `json:"targeting_optimization_types,omitempty"`
-	DSABeneficiary               string                 `json:"dsa_beneficiary,omitempty"`
-	DSAPayor                     string                 `json:"dsa_payor,omitempty"`
-	InstagramUserID              string                 `json:"instagram_user_id,omitempty"`
-	RegionalRegulatedCategories  []string               `json:"regional_regulated_categories,omitempty"`
-	RegionalRegulationIdentities map[string]string      `json:"regional_regulation_identities,omitempty"`
+	AccountID                string                 `json:"account_id,omitempty"`
+	AttributionSpec          json.RawMessage        `json:"attribution_spec,omitempty"`
+	BidAmount                uint64                 `json:"bid_amount,omitempty"`
+	BidStrategy              string                 `json:"bid_strategy,omitempty"`
+	BillingEvent             string                 `json:"billing_event,omitempty"`
+	BudgetRemaining          float64                `json:"budget_remaining,omitempty,string"`
+	Campaign                 *Campaign              `json:"campaign,omitempty"`
+	CampaignID               string                 `json:"campaign_id,omitempty"`
+	ConfiguredStatus         string                 `json:"configured_status,omitempty"`
+	CreatedTime              fb.Time                `json:"created_time,omitzero"`
+	DailyBudget              float64                `json:"daily_budget,omitempty,string"`
+	DailyMinSpendTarget      uint64                 `json:"daily_min_spend_target,omitempty,string"`
+	DailySpendCap            uint64                 `json:"daily_spend_cap,omitempty,string"`
+	DestinationType          string                 `json:"destination_type,omitempty"`
+	DeliveryEstimate         *DeliveryEstimate      `json:"delivery_estimate,omitempty"`
+	EffectiveStatus          string                 `json:"effective_status,omitempty"`
+	EndTime                  fb.Time                `json:"end_time,omitzero"`
+	FrequencyControlSpecs    []FrequencyControlSpec `json:"frequency_control_specs,omitempty"`
+	ID                       string                 `json:"id,omitempty"`
+	LifetimeBudget           float64                `json:"lifetime_budget,omitempty,string"`
+	LifetimeMinSpendTarget   uint64                 `json:"lifetime_min_spend_target,omitempty,string"`
+	LifeTimeSpendCap         uint64                 `json:"lifetime_spend_cap,omitempty,string"`
+	LifetimeImps             uint64                 `json:"lifetime_imps,omitempty"`
+	Name                     string                 `json:"name,omitempty"`
+	OptimizationGoal         string                 `json:"optimization_goal,omitempty"`
+	PacingType               []string               `json:"pacing_type,omitempty"`
+	PlacementSoftOptOut      *PlacementSoftOptOut   `json:"placement_soft_opt_out,omitempty"`
+	PromotedObject           *PromotedObject        `json:"promoted_object,omitempty"`
+	RecurringBudgetSemantics bool                   `json:"recurring_budget_semantics,omitempty"`
+	// fb.Time is a struct, so `omitempty` never drops a zero value (it would marshal as
+	// "0001-01-01T00:00:00+0000" and Meta rejects that as a start_time edit on a running ad
+	// set). `omitzero` drops the zero value, but is only honored when built with go >= 1.24.
+	StartTime                    fb.Time           `json:"start_time,omitzero"`
+	Status                       string            `json:"status,omitempty"`
+	Targeting                    *Targeting        `json:"targeting,omitempty"`
+	UpdatedTime                  fb.Time           `json:"updated_time,omitzero"`
+	TargetingOptimizationTypes   map[string]int32  `json:"targeting_optimization_types,omitempty"`
+	DSABeneficiary               string            `json:"dsa_beneficiary,omitempty"`
+	DSAPayor                     string            `json:"dsa_payor,omitempty"`
+	InstagramUserID              string            `json:"instagram_user_id,omitempty"`
+	RegionalRegulatedCategories  []string          `json:"regional_regulated_categories,omitempty"`
+	RegionalRegulationIdentities map[string]string `json:"regional_regulation_identities,omitempty"`
 }
 
 // PlacementSoftOptOut contains placement positions to opt out of.
