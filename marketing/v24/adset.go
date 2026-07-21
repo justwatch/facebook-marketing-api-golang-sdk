@@ -185,7 +185,7 @@ type Adset struct {
 	DestinationType              string                 `json:"destination_type,omitempty"`
 	DeliveryEstimate             *DeliveryEstimate      `json:"delivery_estimate,omitempty"`
 	EffectiveStatus              string                 `json:"effective_status,omitempty"`
-	EndTime                      fb.Time                `json:"end_time,omitempty"`
+	EndTime                      *fb.Time               `json:"end_time,omitempty"`
 	FrequencyControlSpecs        []FrequencyControlSpec `json:"frequency_control_specs,omitempty"`
 	ID                           string                 `json:"id,omitempty"`
 	LifetimeBudget               float64                `json:"lifetime_budget,omitempty,string"`
@@ -198,7 +198,7 @@ type Adset struct {
 	PlacementSoftOptOut          *PlacementSoftOptOut   `json:"placement_soft_opt_out,omitempty"`
 	PromotedObject               *PromotedObject        `json:"promoted_object,omitempty"`
 	RecurringBudgetSemantics     bool                   `json:"recurring_budget_semantics,omitempty"`
-	StartTime                    fb.Time                `json:"start_time,omitempty"`
+	StartTime                    *fb.Time               `json:"start_time,omitempty"`
 	Status                       string                 `json:"status,omitempty"`
 	Targeting                    *Targeting             `json:"targeting,omitempty"`
 	UpdatedTime                  fb.Time                `json:"updated_time,omitempty"`
