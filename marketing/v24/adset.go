@@ -213,13 +213,30 @@ type Adset struct {
 	RegionalRegulationIdentities map[string]string `json:"regional_regulation_identities,omitempty"`
 }
 
-// PlacementSoftOptOut contains placement positions to opt out of.
+// PlacementSoftOptOut contains the excluded placement positions Meta may still
+// spend a limited budget on ("allow limited spending to excluded placements").
 type PlacementSoftOptOut struct {
-	FacebookPositions        []string `json:"facebook_positions,omitempty"`
-	AudienceNetworkPositions []string `json:"audience_network_positions,omitempty"`
-	InstagramPositions       []string `json:"instagram_positions,omitempty"`
-	ThreadsPositions         []string `json:"threads_positions,omitempty"`
-	MessengerPositions       []string `json:"messenger_positions,omitempty"`
+	FacebookPositions        []string `json:"facebook_positions"`
+	AudienceNetworkPositions []string `json:"audience_network_positions"`
+	InstagramPositions       []string `json:"instagram_positions"`
+	ThreadsPositions         []string `json:"threads_positions"`
+	MessengerPositions       []string `json:"messenger_positions"`
+}
+
+// MarshalJSON always emits every position key as an array. Meta treats a
+// missing or null position list as "keep the current value" (and auto-enables
+// limited spend on excluded placements at adset creation); an explicit empty
+// array is the only payload that disables it.
+func (p PlacementSoftOptOut) MarshalJSON() ([]byte, error) {
+	type placementSoftOptOut PlacementSoftOptOut
+	a := placementSoftOptOut(p)
+	for _, positions := range []*[]string{&a.FacebookPositions, &a.AudienceNetworkPositions, &a.InstagramPositions, &a.ThreadsPositions, &a.MessengerPositions} {
+		if *positions == nil {
+			*positions = []string{}
+		}
+	}
+
+	return json.Marshal(a)
 }
 
 // FrequencyControlSpec controls the frequency of an adset.
