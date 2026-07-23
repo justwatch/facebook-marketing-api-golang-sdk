@@ -213,13 +213,28 @@ type Adset struct {
 	RegionalRegulationIdentities map[string]string `json:"regional_regulation_identities,omitempty"`
 }
 
-// PlacementSoftOptOut contains placement positions to opt out of.
+// Positions is a placement position list that marshals as an explicit empty
+// array when nil: Meta treats null or missing position lists as "keep the
+// current value", so only [] can clear one.
+type Positions []string
+
+// MarshalJSON emits [] instead of null for a nil list.
+func (p Positions) MarshalJSON() ([]byte, error) {
+	if p == nil {
+		return []byte("[]"), nil
+	}
+
+	return json.Marshal([]string(p))
+}
+
+// PlacementSoftOptOut contains the excluded placement positions Meta may still
+// spend a limited budget on ("allow limited spending to excluded placements").
 type PlacementSoftOptOut struct {
-	FacebookPositions        []string `json:"facebook_positions,omitempty"`
-	AudienceNetworkPositions []string `json:"audience_network_positions,omitempty"`
-	InstagramPositions       []string `json:"instagram_positions,omitempty"`
-	ThreadsPositions         []string `json:"threads_positions,omitempty"`
-	MessengerPositions       []string `json:"messenger_positions,omitempty"`
+	FacebookPositions        Positions `json:"facebook_positions"`
+	AudienceNetworkPositions Positions `json:"audience_network_positions"`
+	InstagramPositions       Positions `json:"instagram_positions"`
+	ThreadsPositions         Positions `json:"threads_positions"`
+	MessengerPositions       Positions `json:"messenger_positions"`
 }
 
 // FrequencyControlSpec controls the frequency of an adset.
