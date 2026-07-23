@@ -213,30 +213,28 @@ type Adset struct {
 	RegionalRegulationIdentities map[string]string `json:"regional_regulation_identities,omitempty"`
 }
 
+// Positions is a placement position list that marshals as an explicit empty
+// array when nil: Meta treats null or missing position lists as "keep the
+// current value", so only [] can clear one.
+type Positions []string
+
+// MarshalJSON emits [] instead of null for a nil list.
+func (p Positions) MarshalJSON() ([]byte, error) {
+	if p == nil {
+		return []byte("[]"), nil
+	}
+
+	return json.Marshal([]string(p))
+}
+
 // PlacementSoftOptOut contains the excluded placement positions Meta may still
 // spend a limited budget on ("allow limited spending to excluded placements").
 type PlacementSoftOptOut struct {
-	FacebookPositions        []string `json:"facebook_positions"`
-	AudienceNetworkPositions []string `json:"audience_network_positions"`
-	InstagramPositions       []string `json:"instagram_positions"`
-	ThreadsPositions         []string `json:"threads_positions"`
-	MessengerPositions       []string `json:"messenger_positions"`
-}
-
-// MarshalJSON always emits every position key as an array. Meta treats a
-// missing or null position list as "keep the current value" (and auto-enables
-// limited spend on excluded placements at adset creation); an explicit empty
-// array is the only payload that disables it.
-func (p PlacementSoftOptOut) MarshalJSON() ([]byte, error) {
-	type placementSoftOptOut PlacementSoftOptOut
-	a := placementSoftOptOut(p)
-	for _, positions := range []*[]string{&a.FacebookPositions, &a.AudienceNetworkPositions, &a.InstagramPositions, &a.ThreadsPositions, &a.MessengerPositions} {
-		if *positions == nil {
-			*positions = []string{}
-		}
-	}
-
-	return json.Marshal(a)
+	FacebookPositions        Positions `json:"facebook_positions"`
+	AudienceNetworkPositions Positions `json:"audience_network_positions"`
+	InstagramPositions       Positions `json:"instagram_positions"`
+	ThreadsPositions         Positions `json:"threads_positions"`
+	MessengerPositions       Positions `json:"messenger_positions"`
 }
 
 // FrequencyControlSpec controls the frequency of an adset.
