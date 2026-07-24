@@ -2,6 +2,8 @@ package v24
 
 import (
 	"context"
+	"net/url"
+	"strings"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -117,4 +119,63 @@ func (ps *PostService) ListInstagramComments(ctx context.Context, postID string,
 	}
 
 	return count, nil
+}
+
+// ListInstagramCommentsByMediaIDs returns comments and replies grouped by media ID.
+func (ps *PostService) ListInstagramCommentsByMediaIDs(ctx context.Context, mediaIDs []string) (map[string][]InstagramComment, error) {
+	const batchSize = 25
+
+	result := make(map[string][]InstagramComment, len(mediaIDs))
+	for _, mediaID := range mediaIDs {
+		result[mediaID] = []InstagramComment{}
+	}
+
+	for start := 0; start < len(mediaIDs); start += batchSize {
+		end := start + batchSize
+		if end > len(mediaIDs) {
+			end = len(mediaIDs)
+		}
+
+		route := fb.NewRoute(Version, "/").
+			Fields("comments.limit(1000){id,text,replies.limit(1000){id,text}}")
+		requestURL, err := url.Parse(route.String())
+		if err != nil {
+			return nil, err
+		}
+		query := requestURL.Query()
+		query.Set("ids", strings.Join(mediaIDs[start:end], ","))
+		requestURL.RawQuery = query.Encode()
+
+		posts := map[string]struct {
+			Comments instagramComments `json:"comments"`
+		}{}
+		if err := ps.c.GetJSON(ctx, requestURL.String(), &posts); err != nil {
+			return nil, err
+		}
+		for mediaID, post := range posts {
+			result[mediaID] = post.Comments.flatten()
+		}
+	}
+
+	return result, nil
+}
+
+type instagramCommentNode struct {
+	InstagramComment
+	Replies instagramComments `json:"replies"`
+}
+
+type instagramComments struct {
+	Data []instagramCommentNode `json:"data"`
+}
+
+func (c instagramComments) flatten() []InstagramComment {
+	result := []InstagramComment{}
+	for _, comment := range c.Data {
+		if comment.Text != "" {
+			result = append(result, comment.InstagramComment)
+		}
+		result = append(result, comment.Replies.flatten()...)
+	}
+	return result
 }
