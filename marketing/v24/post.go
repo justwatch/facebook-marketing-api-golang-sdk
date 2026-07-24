@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"sort"
 	"strings"
 
 	"golang.org/x/sync/errgroup"
@@ -159,6 +161,86 @@ func (ps *PostService) CountComments(ctx context.Context, postID string) (uint64
 	err := ps.c.GetJSON(ctx, fb.NewRoute(Version, "/%s/comments", postID).Limit(0).Summary("1").String(), sc)
 
 	return sc.Summary.TotalCount, err
+}
+
+// CountCommentsByPostIDs returns comment counts keyed by post ID.
+// Attached objects are resolved when the post itself reports no comments.
+func (ps *PostService) CountCommentsByPostIDs(ctx context.Context, postIDs []string) (map[string]uint64, error) {
+	const batchSize = 50
+
+	counts := make(map[string]uint64, len(postIDs))
+	postIDsByObjectID := map[string][]string{}
+
+	for start := 0; start < len(postIDs); start += batchSize {
+		end := start + batchSize
+		if end > len(postIDs) {
+			end = len(postIDs)
+		}
+
+		posts, err := ps.fetchPostCommentSummaries(ctx, postIDs[start:end])
+		if err != nil {
+			return nil, err
+		}
+		for postID, post := range posts {
+			if post.Comments.Summary.TotalCount > 0 || post.ObjectID == "" {
+				counts[postID] = post.Comments.Summary.TotalCount
+				continue
+			}
+			postIDsByObjectID[post.ObjectID] = append(postIDsByObjectID[post.ObjectID], postID)
+		}
+	}
+
+	objectIDs := make([]string, 0, len(postIDsByObjectID))
+	for objectID := range postIDsByObjectID {
+		objectIDs = append(objectIDs, objectID)
+	}
+	sort.Strings(objectIDs)
+
+	for start := 0; start < len(objectIDs); start += batchSize {
+		end := start + batchSize
+		if end > len(objectIDs) {
+			end = len(objectIDs)
+		}
+
+		objects, err := ps.fetchPostCommentSummaries(ctx, objectIDs[start:end])
+		if err != nil {
+			return nil, err
+		}
+		for objectID, object := range objects {
+			for _, postID := range postIDsByObjectID[objectID] {
+				counts[postID] = object.Comments.Summary.TotalCount
+			}
+		}
+	}
+
+	return counts, nil
+}
+
+type postCommentSummary struct {
+	ObjectID string `json:"object_id"`
+	Comments struct {
+		Summary struct {
+			TotalCount uint64 `json:"total_count"`
+		} `json:"summary"`
+	} `json:"comments"`
+}
+
+func (ps *PostService) fetchPostCommentSummaries(ctx context.Context, postIDs []string) (map[string]postCommentSummary, error) {
+	route := fb.NewRoute(Version, "/").
+		Fields("object_id", "comments.limit(0).summary(true)")
+	requestURL, err := url.Parse(route.String())
+	if err != nil {
+		return nil, err
+	}
+	query := requestURL.Query()
+	query.Set("ids", strings.Join(postIDs, ","))
+	requestURL.RawQuery = query.Encode()
+
+	posts := map[string]postCommentSummary{}
+	if err := ps.c.GetJSON(ctx, requestURL.String(), &posts); err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 // ListComments creates a new CommentListCall
