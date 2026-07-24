@@ -78,7 +78,7 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 				// before retrying so we don't worsen the throttle score.
 				if IsRateLimited(ec.Error) || ec.Error.IsTransient {
 					resp.Body = io.NopCloser(bytes.NewReader(body))
-					t.waitForRetry(r)
+					t.throttle(r)
 					return fmt.Errorf("rate limited by facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
 				}
 			}
@@ -101,16 +101,14 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-// waitForRetry pauses before a retry attempt. It prefers the reset duration
-// from the last known rate-limit headers; the exponential backoff timer
-// handles further spacing between attempts.
-func (t *retryTransport) waitForRetry(r *http.Request) {
+// throttle opens the shared cool-down gate after a throttle response and waits
+// it out (with jitter), so concurrent callers back off together instead of
+// retrying in lockstep. The exponential backoff timer handles further spacing
+// between attempts. No-op when no shared state is configured.
+func (t *retryTransport) throttle(r *http.Request) {
 	if t.state == nil {
 		return
 	}
-	dur := t.state.blockDurationForRetry()
-	if dur <= 0 {
-		return
-	}
-	t.state.sleep(r.Context(), dur)
+	t.state.registerThrottle()
+	t.state.waitForGate(r.Context())
 }
