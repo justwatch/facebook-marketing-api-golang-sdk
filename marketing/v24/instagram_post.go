@@ -3,7 +3,6 @@ package v24
 import (
 	"context"
 	"net/url"
-	"strings"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -87,6 +86,36 @@ func (ps *PostService) GetInstagramPost(ctx context.Context, postID string) (*In
 	return &res, nil
 }
 
+// GetInstagramPermalinksByMediaIDs returns permalinks keyed by media ID.
+func (ps *PostService) GetInstagramPermalinksByMediaIDs(ctx context.Context, mediaIDs []string) (map[string]string, error) {
+	const batchSize = 25
+
+	relativeURLs := make([]string, len(mediaIDs))
+	for i, mediaID := range mediaIDs {
+		requestURL := url.URL{Path: mediaID}
+		query := requestURL.Query()
+		query.Set("fields", "permalink")
+		requestURL.RawQuery = query.Encode()
+		relativeURLs[i] = requestURL.String()
+	}
+	batchResponses, err := ps.getBatches(ctx, relativeURLs, batchSize, 4)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]string, len(mediaIDs))
+	for i, batchResponse := range batchResponses {
+		post := struct {
+			Permalink string `json:"permalink"`
+		}{}
+		if err := decodeGraphBatchResponse(batchResponse, &post); err != nil {
+			return nil, err
+		}
+		result[mediaIDs[i]] = post.Permalink
+	}
+	return result, nil
+}
+
 type InstagramComment struct {
 	ID        string  `json:"id,omitempty"`
 	Text      string  `json:"text,omitempty"`
@@ -130,31 +159,26 @@ func (ps *PostService) ListInstagramCommentsByMediaIDs(ctx context.Context, medi
 		result[mediaID] = []InstagramComment{}
 	}
 
-	for start := 0; start < len(mediaIDs); start += batchSize {
-		end := start + batchSize
-		if end > len(mediaIDs) {
-			end = len(mediaIDs)
-		}
-
-		route := fb.NewRoute(Version, "/").
-			Fields("comments.limit(1000){id,text,replies.limit(1000){id,text}}")
-		requestURL, err := url.Parse(route.String())
-		if err != nil {
-			return nil, err
-		}
+	relativeURLs := make([]string, len(mediaIDs))
+	for i, mediaID := range mediaIDs {
+		requestURL := url.URL{Path: mediaID}
 		query := requestURL.Query()
-		query.Set("ids", strings.Join(mediaIDs[start:end], ","))
+		query.Set("fields", "comments.limit(1000){id,text,replies.limit(1000){id,text}}")
 		requestURL.RawQuery = query.Encode()
-
-		posts := map[string]struct {
+		relativeURLs[i] = requestURL.String()
+	}
+	batchResponses, err := ps.getBatches(ctx, relativeURLs, batchSize, 4)
+	if err != nil {
+		return nil, err
+	}
+	for i, batchResponse := range batchResponses {
+		post := struct {
 			Comments instagramComments `json:"comments"`
 		}{}
-		if err := ps.c.GetJSON(ctx, requestURL.String(), &posts); err != nil {
+		if err := decodeGraphBatchResponse(batchResponse, &post); err != nil {
 			return nil, err
 		}
-		for mediaID, post := range posts {
-			result[mediaID] = post.Comments.flatten()
-		}
+		result[mediaIDs[i]] = post.Comments.flatten()
 	}
 
 	return result, nil

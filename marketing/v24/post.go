@@ -166,81 +166,106 @@ func (ps *PostService) CountComments(ctx context.Context, postID string) (uint64
 // CountCommentsByPostIDs returns comment counts keyed by post ID.
 // Attached objects are resolved when the post itself reports no comments.
 func (ps *PostService) CountCommentsByPostIDs(ctx context.Context, postIDs []string) (map[string]uint64, error) {
-	const batchSize = 50
-
-	counts := make(map[string]uint64, len(postIDs))
-	postIDsByObjectID := map[string][]string{}
-
-	for start := 0; start < len(postIDs); start += batchSize {
-		end := start + batchSize
-		if end > len(postIDs) {
-			end = len(postIDs)
-		}
-
-		posts, err := ps.fetchPostCommentSummaries(ctx, postIDs[start:end])
-		if err != nil {
-			return nil, err
-		}
-		for postID, post := range posts {
-			if post.Comments.Summary.TotalCount > 0 || post.ObjectID == "" {
-				counts[postID] = post.Comments.Summary.TotalCount
-				continue
-			}
-			postIDsByObjectID[post.ObjectID] = append(postIDsByObjectID[post.ObjectID], postID)
+	counts, err := ps.fetchPostCommentCounts(ctx, postIDs)
+	if err != nil {
+		return nil, err
+	}
+	postIDsWithoutComments := make([]string, 0, len(postIDs))
+	for _, postID := range postIDs {
+		if counts[postID] == 0 {
+			postIDsWithoutComments = append(postIDsWithoutComments, postID)
 		}
 	}
 
-	objectIDs := make([]string, 0, len(postIDsByObjectID))
-	for objectID := range postIDsByObjectID {
-		objectIDs = append(objectIDs, objectID)
+	sort.Strings(postIDsWithoutComments)
+	objectIDsByPostID, err := ps.fetchPostAttachedObjectIDs(ctx, postIDsWithoutComments)
+	if err != nil {
+		return nil, err
+	}
+
+	postIDsByObjectID := make(map[string][]string, len(objectIDsByPostID))
+	objectIDs := make([]string, 0, len(objectIDsByPostID))
+	for postID, objectID := range objectIDsByPostID {
+		if len(postIDsByObjectID[objectID]) == 0 {
+			objectIDs = append(objectIDs, objectID)
+		}
+		postIDsByObjectID[objectID] = append(postIDsByObjectID[objectID], postID)
 	}
 	sort.Strings(objectIDs)
 
-	for start := 0; start < len(objectIDs); start += batchSize {
-		end := start + batchSize
-		if end > len(objectIDs) {
-			end = len(objectIDs)
-		}
-
-		objects, err := ps.fetchPostCommentSummaries(ctx, objectIDs[start:end])
-		if err != nil {
-			return nil, err
-		}
-		for objectID, object := range objects {
-			for _, postID := range postIDsByObjectID[objectID] {
-				counts[postID] = object.Comments.Summary.TotalCount
-			}
+	objectCounts, err := ps.fetchPostCommentCounts(ctx, objectIDs)
+	if err != nil {
+		return nil, err
+	}
+	for objectID, objectCount := range objectCounts {
+		for _, postID := range postIDsByObjectID[objectID] {
+			counts[postID] = objectCount
 		}
 	}
 
 	return counts, nil
 }
 
-type postCommentSummary struct {
-	ObjectID string `json:"object_id"`
-	Comments struct {
-		Summary struct {
-			TotalCount uint64 `json:"total_count"`
-		} `json:"summary"`
-	} `json:"comments"`
+type postAttachments struct {
+	Data []struct {
+		Target struct {
+			ID string `json:"id"`
+		} `json:"target"`
+	} `json:"data"`
 }
 
-func (ps *PostService) fetchPostCommentSummaries(ctx context.Context, postIDs []string) (map[string]postCommentSummary, error) {
-	route := fb.NewRoute(Version, "/").
-		Fields("object_id", "comments.limit(0).summary(true)")
-	requestURL, err := url.Parse(route.String())
+func (ps *PostService) fetchPostCommentCounts(ctx context.Context, postIDs []string) (map[string]uint64, error) {
+	relativeURLs := make([]string, len(postIDs))
+	for i, postID := range postIDs {
+		requestURL := url.URL{Path: postID + "/comments"}
+		query := requestURL.Query()
+		query.Set("limit", "0")
+		query.Set("summary", "true")
+		requestURL.RawQuery = query.Encode()
+		relativeURLs[i] = requestURL.String()
+	}
+
+	batchResponses, err := ps.getBatches(ctx, relativeURLs, 10, 4)
 	if err != nil {
 		return nil, err
 	}
-	query := requestURL.Query()
-	query.Set("ids", strings.Join(postIDs, ","))
-	requestURL.RawQuery = query.Encode()
 
-	posts := map[string]postCommentSummary{}
-	if err := ps.c.GetJSON(ctx, requestURL.String(), &posts); err != nil {
+	counts := make(map[string]uint64, len(postIDs))
+	for i, batchResponse := range batchResponses {
+		summary := fb.SummaryContainer{}
+		if err := decodeGraphBatchResponse(batchResponse, &summary); err != nil {
+			return nil, err
+		}
+		counts[postIDs[i]] = summary.Summary.TotalCount
+	}
+	return counts, nil
+}
+
+func (ps *PostService) fetchPostAttachedObjectIDs(ctx context.Context, postIDs []string) (map[string]string, error) {
+	relativeURLs := make([]string, len(postIDs))
+	for i, postID := range postIDs {
+		relativeURLs[i] = postID + "/attachments?fields=target"
+	}
+
+	batchResponses, err := ps.getBatches(ctx, relativeURLs, 10, 4)
+	if err != nil {
 		return nil, err
 	}
-	return posts, nil
+
+	objectIDsByPostID := make(map[string]string, len(postIDs))
+	for i, batchResponse := range batchResponses {
+		attachments := postAttachments{}
+		if err := decodeGraphBatchResponse(batchResponse, &attachments); err != nil {
+			if fb.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+		if len(attachments.Data) > 0 && attachments.Data[0].Target.ID != "" {
+			objectIDsByPostID[postIDs[i]] = attachments.Data[0].Target.ID
+		}
+	}
+	return objectIDsByPostID, nil
 }
 
 // ListComments creates a new CommentListCall
