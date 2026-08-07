@@ -177,6 +177,41 @@ var Adcreativefields = []string{
 	"title",
 	"video_id",
 	"asset_feed_spec",
+	"branded_content",
+	"branded_content_sponsor_page_id",
+	"facebook_branded_content",
+	"instagram_branded_content",
+}
+
+// AdCreativeBrandedContentAds holds partnership-ad (branded content) info of a creative.
+// https://developers.facebook.com/docs/marketing-api/reference/ad-creative-branded-content-ads/
+type AdCreativeBrandedContentAds struct {
+	AdFormat                     int32                                `json:"ad_format,omitempty"`
+	ParentSourceFacebookPostID   string                               `json:"parent_source_facebook_post_id,omitempty"`
+	ParentSourceInstagramMediaID string                               `json:"parent_source_instagram_media_id,omitempty"`
+	Partners                     []AdCreativeBrandedContentAdsPartner `json:"partners,omitempty"`
+	PromotedPageID               string                               `json:"promoted_page_id,omitempty"`
+}
+
+// AdCreativeBrandedContentAdsPartner is a partner identity featured in a partnership ad.
+type AdCreativeBrandedContentAdsPartner struct {
+	FBPageID           string `json:"fb_page_id,omitempty"`
+	HasCreateAdsAccess bool   `json:"has_create_ads_access,omitempty"`
+	IdentityType       string `json:"identity_type,omitempty"`
+	IGAssetID          string `json:"ig_asset_id,omitempty"`
+	IGUserID           string `json:"ig_user_id,omitempty"`
+}
+
+// AdCreativeFacebookBrandedContent holds Facebook-side sponsor info of a partnership ad.
+type AdCreativeFacebookBrandedContent struct {
+	SharedToSponsorStatus string `json:"shared_to_sponsor_status,omitempty"`
+	SponsorPageID         string `json:"sponsor_page_id,omitempty"`
+	SponsorRelationship   string `json:"sponsor_relationship,omitempty"`
+}
+
+// AdCreativeInstagramBrandedContent holds Instagram-side sponsor info of a partnership ad.
+type AdCreativeInstagramBrandedContent struct {
+	SponsorID string `json:"sponsor_id,omitempty"`
 }
 
 // AdCreative https://developers.facebook.com/docs/marketing-api/reference/ad-creative
@@ -192,6 +227,12 @@ type AdCreative struct {
 	Body string `json:"body,omitempty"`
 	// Branded Content sponsor ID, creating ads using existing BC posts
 	BrandedContentSponsorPageID string `json:"branded_content_sponsor_page_id,omitempty"`
+	// Branded content (partnership ad) info of this creative
+	BrandedContent *AdCreativeBrandedContentAds `json:"branded_content,omitempty"`
+	// Facebook branded content (partnership ad) sponsor info
+	FacebookBrandedContent *AdCreativeFacebookBrandedContent `json:"facebook_branded_content,omitempty"`
+	// Instagram branded content (partnership ad) sponsor info
+	InstagramBrandedContent *AdCreativeInstagramBrandedContent `json:"instagram_branded_content,omitempty"`
 
 	CallToActionType string `json:"call_to_action_type,omitempty"`
 	// The ID of an Instagram post to use in an ad.
