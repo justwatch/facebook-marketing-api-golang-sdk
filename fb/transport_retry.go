@@ -12,6 +12,15 @@ import (
 	"github.com/cenk/backoff"
 )
 
+// Meta's catch-all adcreative rejection ("Something went wrong. Please try again
+// later") arrives as a 400 with is_transient=false, but is flaky per request:
+// siblings posted in the same batch to the same account succeed.
+const (
+	genericAdCreativeCode     = 100
+	genericAdCreativeSubcode  = 1487390
+	maxGenericAdCreativeTries = 3
+)
+
 type retryTransport struct {
 	next  http.RoundTripper
 	state *rateLimitState // may be nil; used for header-informed retry waits
@@ -33,7 +42,7 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	bo.InitialInterval = 6 * time.Second
 	bo.MaxElapsedTime = 10 * time.Minute
 	var resp *http.Response
-	var attempt int
+	var attempt, genericTries int
 	err := backoff.Retry(func() error {
 		attempt++
 		var e error
@@ -80,6 +89,14 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 					resp.Body = io.NopCloser(bytes.NewReader(body))
 					t.waitForRetry(r)
 					return fmt.Errorf("rate limited by facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
+				}
+
+				// Bounded so a genuinely broken creative still fails fast.
+				if ec.Error.Code == genericAdCreativeCode && ec.Error.ErrorSubcode == genericAdCreativeSubcode && genericTries < maxGenericAdCreativeTries {
+					genericTries++
+					resp.Body = io.NopCloser(bytes.NewReader(body))
+
+					return fmt.Errorf("generic adcreative failure from facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
 				}
 			}
 
