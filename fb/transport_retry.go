@@ -12,14 +12,9 @@ import (
 	"github.com/cenk/backoff"
 )
 
-// Meta's catch-all adcreative rejection ("Something went wrong. Please try again
-// later") arrives as a 400 with is_transient=false, but is flaky per request:
-// siblings posted in the same batch to the same account succeed.
-const (
-	genericAdCreativeCode     = 100
-	genericAdCreativeSubcode  = 1487390
-	maxGenericAdCreativeTries = 3
-)
+// maxFlakyAdCreativeRetries bounds retries of a flaky adcreative rejection so a
+// genuinely broken creative still fails fast, with its real error intact.
+const maxFlakyAdCreativeRetries = 3
 
 type retryTransport struct {
 	next  http.RoundTripper
@@ -42,7 +37,7 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	bo.InitialInterval = 6 * time.Second
 	bo.MaxElapsedTime = 10 * time.Minute
 	var resp *http.Response
-	var attempt, genericTries int
+	var attempt, flakyAdCreativeRetries int
 	err := backoff.Retry(func() error {
 		attempt++
 		var e error
@@ -91,12 +86,10 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 					return fmt.Errorf("rate limited by facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
 				}
 
-				// Bounded so a genuinely broken creative still fails fast.
-				if ec.Error.Code == genericAdCreativeCode && ec.Error.ErrorSubcode == genericAdCreativeSubcode && genericTries < maxGenericAdCreativeTries {
-					genericTries++
+				if IsFlakyAdCreative(ec.Error) && flakyAdCreativeRetries < maxFlakyAdCreativeRetries {
+					flakyAdCreativeRetries++
 					resp.Body = io.NopCloser(bytes.NewReader(body))
-
-					return fmt.Errorf("generic adcreative failure from facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
+					return fmt.Errorf("flaky adcreative failure from facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
 				}
 			}
 

@@ -81,6 +81,18 @@ func IsRateLimited(err error) bool {
 	return false
 }
 
+// IsFlakyAdCreative returns whether the error is Meta's catch-all adcreative
+// rejection. Meta sends it as a 400 with is_transient=false, but it is flaky per
+// request: sibling creatives posted in the same batch to the same account succeed.
+func IsFlakyAdCreative(err error) bool {
+	e, ok := err.(*Error)
+	if !ok || e == nil {
+		return false
+	}
+
+	return e.Code == 100 && e.ErrorSubcode == 1487390
+}
+
 // IsReduceData returns whether the error is a Facebook error asking to reduce the amount of data requested.
 func IsReduceData(err error) bool {
 	e, ok := err.(*Error)
