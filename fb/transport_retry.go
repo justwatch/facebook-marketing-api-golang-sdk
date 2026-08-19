@@ -12,6 +12,10 @@ import (
 	"github.com/cenk/backoff"
 )
 
+// maxFlakyAdCreativeRetries bounds retries of a flaky adcreative rejection so a
+// genuinely broken creative still fails fast, with its real error intact.
+const maxFlakyAdCreativeRetries = 3
+
 type retryTransport struct {
 	next  http.RoundTripper
 	state *rateLimitState // may be nil; used for header-informed retry waits
@@ -33,7 +37,7 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	bo.InitialInterval = 6 * time.Second
 	bo.MaxElapsedTime = 10 * time.Minute
 	var resp *http.Response
-	var attempt int
+	var attempt, flakyAdCreativeRetries int
 	err := backoff.Retry(func() error {
 		attempt++
 		var e error
@@ -80,6 +84,12 @@ func (t *retryTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 					resp.Body = io.NopCloser(bytes.NewReader(body))
 					t.waitForRetry(r)
 					return fmt.Errorf("rate limited by facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
+				}
+
+				if IsFlakyAdCreative(ec.Error) && flakyAdCreativeRetries < maxFlakyAdCreativeRetries {
+					flakyAdCreativeRetries++
+					resp.Body = io.NopCloser(bytes.NewReader(body))
+					return fmt.Errorf("flaky adcreative failure from facebook (code=%d subcode=%d), attempt %d", ec.Error.Code, ec.Error.ErrorSubcode, attempt)
 				}
 			}
 
