@@ -80,6 +80,55 @@ func (as *AdService) List(act string) *AdListCall {
 	}
 }
 
+// adCreativeRenderFields are the creative fields that decide what an ad renders.
+const adCreativeRenderFields = "creative{id,object_type,object_story_id,source_instagram_media_id," +
+	"actor_id,instagram_user_id,image_hash,video_id,title,body,link_url,call_to_action_type,call_to_action," +
+	"object_story_spec,asset_feed_spec,interactive_components_spec}"
+
+// adsetPlacementFields are the ad set fields that decide where an ad renders.
+// Placement targeting lives on the ad set, so two ads sharing a creative can
+// reach different surfaces.
+const adsetPlacementFields = "adset{targeting{publisher_platforms,facebook_positions," +
+	"instagram_positions,audience_network_positions,messenger_positions}}"
+
+// AdEffectiveStatuses is every status an ad can be in. The ads edge hides
+// archived and deleted ads unless they are asked for.
+var AdEffectiveStatuses = []string{
+	"ACTIVE", "PAUSED", "ADSET_PAUSED", "CAMPAIGN_PAUSED", "ARCHIVED",
+	"DELETED", "DISAPPROVED", "PENDING_REVIEW", "IN_PROCESS", "WITH_ISSUES",
+}
+
+// GetPlacementTargeting returns the placement targeting of the ad set an ad
+// hangs under, which is what decides the surfaces the ad reaches.
+func (as *AdService) GetPlacementTargeting(ctx context.Context, id string) (*Targeting, error) {
+	res := &Ad{}
+	err := as.c.GetJSON(ctx, fb.NewRoute(Version, "/%s", id).Fields(adsetPlacementFields).String(), res)
+	if err != nil {
+		if fb.IsNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+	if res.Adset == nil || res.Adset.Targeting == nil {
+		return nil, fmt.Errorf("ad %s has no ad set placement targeting", id)
+	}
+
+	return res.Adset.Targeting, nil
+}
+
+// ListOfCampaign returns all ads of a campaign whatever their status, with the
+// fields that decide what each one renders and where.
+func (as *AdService) ListOfCampaign(campaignID string) *AdListCall {
+	return &AdListCall{
+		RouteBuilder: fb.NewRoute(Version, "/%s/ads", campaignID).
+			Fields("id", "name", adsetPlacementFields, adCreativeRenderFields).
+			Filtering(fb.Filter{Field: "ad.effective_status", Operator: "IN", Value: AdEffectiveStatuses}).
+			Limit(100),
+		c: as.c,
+	}
+}
+
 // ListOfAdset returns all ads of an adset.
 func (as *AdService) ListOfAdset(adsetID string) *AdListCall {
 	return &AdListCall{
