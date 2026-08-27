@@ -645,6 +645,8 @@ type AssetCustomizationRule struct {
 	CallToActionTypeLabel *AssetLabel `json:"call_to_action_type_label,omitempty"`
 	// Priority of this rule (higher = more important)
 	Priority int `json:"priority,omitempty"`
+	// Required on the default rule when the creative boosts an existing post (object_story_id)
+	UseExistingPost bool `json:"use_existing_post,omitempty"`
 }
 
 // PlacementCustomizationSpec specifies which placements a customization rule applies to
