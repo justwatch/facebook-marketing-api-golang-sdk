@@ -178,14 +178,14 @@ type Adset struct {
 	Campaign                     *Campaign              `json:"campaign,omitempty"`
 	CampaignID                   string                 `json:"campaign_id,omitempty"`
 	ConfiguredStatus             string                 `json:"configured_status,omitempty"`
-	CreatedTime                  fb.Time                `json:"created_time,omitempty"`
+	CreatedTime                  *fb.Time               `json:"created_time,omitempty"`
 	DailyBudget                  float64                `json:"daily_budget,omitempty,string"`
 	DailyMinSpendTarget          uint64                 `json:"daily_min_spend_target,omitempty,string"`
 	DailySpendCap                uint64                 `json:"daily_spend_cap,omitempty,string"`
 	DestinationType              string                 `json:"destination_type,omitempty"`
 	DeliveryEstimate             *DeliveryEstimate      `json:"delivery_estimate,omitempty"`
 	EffectiveStatus              string                 `json:"effective_status,omitempty"`
-	EndTime                      fb.Time                `json:"end_time,omitempty"`
+	EndTime                      *fb.Time               `json:"end_time,omitempty"`
 	FrequencyControlSpecs        []FrequencyControlSpec `json:"frequency_control_specs,omitempty"`
 	ID                           string                 `json:"id,omitempty"`
 	LifetimeBudget               float64                `json:"lifetime_budget,omitempty,string"`
@@ -197,10 +197,10 @@ type Adset struct {
 	PacingType                   []string               `json:"pacing_type,omitempty"`
 	PromotedObject               *PromotedObject        `json:"promoted_object,omitempty"`
 	RecurringBudgetSemantics     bool                   `json:"recurring_budget_semantics,omitempty"`
-	StartTime                    fb.Time                `json:"start_time,omitempty"`
+	StartTime                    *fb.Time               `json:"start_time,omitempty"`
 	Status                       string                 `json:"status,omitempty"`
 	Targeting                    *Targeting             `json:"targeting,omitempty"`
-	UpdatedTime                  fb.Time                `json:"updated_time,omitempty"`
+	UpdatedTime                  *fb.Time               `json:"updated_time,omitempty"`
 	TargetingOptimizationTypes   map[string]int32       `json:"targeting_optimization_types,omitempty"`
 	DSABeneficiary               string                 `json:"dsa_beneficiary,omitempty"`
 	DSAPayor                     string                 `json:"dsa_payor,omitempty"`
@@ -290,6 +290,7 @@ type IDContainer struct {
 // GeoLocations is a set of countries, cities, and regions that can be targeted.
 type GeoLocations struct {
 	Countries     []string `json:"countries,omitempty"`
+	CountryGroups []string `json:"country_groups,omitempty"`
 	LocationTypes []string `json:"location_types,omitempty"`
 	Cities        []City   `json:"cities,omitempty"`
 	Regions       []Region `json:"regions,omitempty"`
