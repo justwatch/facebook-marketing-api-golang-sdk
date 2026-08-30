@@ -3,10 +3,16 @@ package fb
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
 )
+
+// minThrottleWait is the shared cool-down applied after a throttle response when
+// Meta does not report a reset window (e.g. transient code=2 errors). It gives
+// the account quiet time to recover instead of retrying with no real pause.
+const minThrottleWait = 5 * time.Second
 
 // RateLimitConfig controls the header-based throttling behaviour of the client.
 type RateLimitConfig struct {
@@ -56,16 +62,22 @@ type adAccountUsageHeader struct {
 type rateLimitState struct {
 	cfg RateLimitConfig
 
-	mu              sync.Mutex
-	maxUsagePct     int           // max across all header fields in the last response
-	blockDuration   time.Duration // time to wait when at BlockAt
-	sleep           func(context.Context, time.Duration) // injectable for tests
+	mu            sync.Mutex
+	maxUsagePct   int           // max across all header fields in the last response
+	blockDuration time.Duration // time to wait when at BlockAt
+	pauseUntil    time.Time     // shared cool-down gate respected by all callers
+
+	sleep func(context.Context, time.Duration) // injectable for tests
+	now   func() time.Time                     // injectable for tests
+	rnd   func() float64                       // injectable for tests; returns [0,1)
 }
 
 func newRateLimitState(cfg RateLimitConfig) *rateLimitState {
 	return &rateLimitState{
 		cfg:   cfg,
 		sleep: sleepWithContext,
+		now:   time.Now,
+		rnd:   rand.Float64,
 	}
 }
 
@@ -166,12 +178,56 @@ func (s *rateLimitState) waitIfNeeded(ctx context.Context) {
 	s.sleep(ctx, delay)
 }
 
-// blockDurationForRetry returns the time to wait before retrying a throttled request.
-// Falls back to 0 if no header info is available (caller then uses its own backoff).
-func (s *rateLimitState) blockDurationForRetry() time.Duration {
+// registerThrottle opens (or extends) the shared cool-down gate after a throttle
+// response. It uses the header-reported reset window when available, otherwise a
+// minimum floor, so transient code=2 throttles still get a real pause.
+func (s *rateLimitState) registerThrottle() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.blockDuration
+
+	dur := s.blockDuration
+	if dur <= 0 {
+		dur = minThrottleWait
+	}
+
+	until := s.now().Add(dur)
+	if until.After(s.pauseUntil) {
+		s.pauseUntil = until
+	}
+}
+
+// waitForGate blocks until the shared cool-down window has passed, adding
+// per-caller jitter so concurrent callers don't all resume at the same instant
+// and immediately re-throttle the account.
+func (s *rateLimitState) waitForGate(ctx context.Context) {
+	if !s.cfg.Enabled {
+		return
+	}
+
+	s.mu.Lock()
+	until := s.pauseUntil
+	s.mu.Unlock()
+
+	if until.IsZero() {
+		return
+	}
+
+	remaining := until.Sub(s.now())
+	if remaining <= 0 {
+		return
+	}
+
+	s.sleep(ctx, remaining+s.jitter(remaining))
+}
+
+// jitter returns a random duration in [0, d/2) used to spread out concurrent
+// callers resuming from the shared gate.
+func (s *rateLimitState) jitter(d time.Duration) time.Duration {
+	if d <= 0 {
+		return 0
+	}
+
+	return time.Duration(s.rnd() * float64(d) / 2)
 }
 
 func maxInt(vals ...int) int {

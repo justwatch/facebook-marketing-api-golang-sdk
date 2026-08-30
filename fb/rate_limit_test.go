@@ -328,7 +328,7 @@ func TestRetryTransport_RetriesOnRateLimit(t *testing.T) {
 	cfg.Enabled = true
 	state := newRateLimitState(cfg)
 	state.sleep = fs.sleep
-	// simulate a header-reported reset time so waitForRetry has something to use
+	// simulate a header-reported reset time so the throttle gate has something to use
 	state.mu.Lock()
 	state.blockDuration = 10 * time.Millisecond
 	state.mu.Unlock()
@@ -344,6 +344,162 @@ func TestRetryTransport_RetriesOnRateLimit(t *testing.T) {
 
 	if callCount != 3 {
 		t.Errorf("expected 3 server calls (2 rate-limited + 1 success), got %d", callCount)
+	}
+}
+
+// --- Shared throttle gate ---
+
+func TestThrottleGate_UsesHeaderDuration(t *testing.T) {
+	fs := &fakeSleep{}
+	state := newRateLimitState(defaultRateLimitConfig())
+	state.sleep = fs.sleep
+	state.rnd = func() float64 { return 0 } // no jitter
+	base := time.Now()
+	state.now = func() time.Time { return base }
+
+	state.mu.Lock()
+	state.blockDuration = 2 * time.Minute
+	state.mu.Unlock()
+
+	state.registerThrottle()
+	state.waitForGate(context.Background())
+
+	if fs.totalDuration() != 2*time.Minute {
+		t.Errorf("expected gate wait=2m, got %v", fs.totalDuration())
+	}
+}
+
+func TestThrottleGate_FallsBackToFloor(t *testing.T) {
+	fs := &fakeSleep{}
+	state := newRateLimitState(defaultRateLimitConfig())
+	state.sleep = fs.sleep
+	state.rnd = func() float64 { return 0 } // no jitter
+	base := time.Now()
+	state.now = func() time.Time { return base }
+
+	// no header reset info → blockDuration stays 0
+	state.registerThrottle()
+	state.waitForGate(context.Background())
+
+	if fs.totalDuration() != minThrottleWait {
+		t.Errorf("expected fallback gate wait=%v, got %v", minThrottleWait, fs.totalDuration())
+	}
+}
+
+func TestThrottleGate_AppliesJitter(t *testing.T) {
+	fs := &fakeSleep{}
+	state := newRateLimitState(defaultRateLimitConfig())
+	state.sleep = fs.sleep
+	state.rnd = func() float64 { return 1.0 } // max jitter
+	base := time.Now()
+	state.now = func() time.Time { return base }
+
+	state.mu.Lock()
+	state.blockDuration = 10 * time.Second
+	state.mu.Unlock()
+
+	state.registerThrottle()
+	state.waitForGate(context.Background())
+
+	// remaining 10s + jitter (1.0 * 10s / 2 = 5s) = 15s
+	if fs.totalDuration() != 15*time.Second {
+		t.Errorf("expected gate wait with jitter=15s, got %v", fs.totalDuration())
+	}
+}
+
+// One throttle response must make every concurrent caller wait, not just the
+// request that was throttled.
+func TestThrottleGate_CoordinatesConcurrentCallers(t *testing.T) {
+	fs := &fakeSleep{}
+	state := newRateLimitState(defaultRateLimitConfig())
+	state.sleep = fs.sleep
+	state.rnd = func() float64 { return 0 } // no jitter
+	base := time.Now()
+	state.now = func() time.Time { return base }
+
+	state.mu.Lock()
+	state.blockDuration = 30 * time.Second
+	state.mu.Unlock()
+
+	state.registerThrottle()
+
+	// Two other callers both observe the shared gate and wait.
+	state.waitForGate(context.Background())
+	state.waitForGate(context.Background())
+
+	if fs.totalDuration() != 60*time.Second {
+		t.Errorf("expected two callers to each wait 30s (total 60s), got %v", fs.totalDuration())
+	}
+}
+
+func TestThrottleGate_NoWaitWhenUnset(t *testing.T) {
+	fs := &fakeSleep{}
+	state := newRateLimitState(defaultRateLimitConfig())
+	state.sleep = fs.sleep
+
+	state.waitForGate(context.Background())
+
+	if fs.totalDuration() != 0 {
+		t.Errorf("expected no wait with empty gate, got %v", fs.totalDuration())
+	}
+}
+
+func TestThrottleGate_DisabledSkipsWait(t *testing.T) {
+	fs := &fakeSleep{}
+	cfg := defaultRateLimitConfig()
+	cfg.Enabled = false
+	state := newRateLimitState(cfg)
+	state.sleep = fs.sleep
+	base := time.Now()
+	state.now = func() time.Time { return base }
+
+	state.registerThrottle()
+	state.waitForGate(context.Background())
+
+	if fs.totalDuration() != 0 {
+		t.Errorf("expected no gate wait when disabled, got %v", fs.totalDuration())
+	}
+}
+
+// Meta returns a transient code=2 for bulk writes that exceed the account
+// write limit. It is not in IsRateLimited, so it must still be retried via the
+// is_transient flag.
+func TestRetryTransport_RetriesOnTransientCode2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("retry backoff makes this test slow")
+	}
+
+	callCount := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		if callCount < 2 {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, `{"error":{"message":"An unexpected error has occurred.","type":"OAuthException","code":2,"error_subcode":0,"is_transient":true}}`)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{}`)
+	}))
+	defer srv.Close()
+
+	fs := &fakeSleep{}
+	state := newRateLimitState(defaultRateLimitConfig())
+	state.sleep = fs.sleep
+
+	transport := newRetryTransport(nil, state)
+	client := &http.Client{Transport: transport}
+
+	resp, err := client.Get(srv.URL)
+	if err != nil {
+		t.Fatalf("expected success after retry, got: %v", err)
+	}
+	resp.Body.Close()
+
+	if callCount != 2 {
+		t.Errorf("expected 2 server calls (1 transient + 1 success), got %d", callCount)
+	}
+	if fs.totalDuration() == 0 {
+		t.Error("expected the throttle gate to apply a non-zero wait for code=2")
 	}
 }
 

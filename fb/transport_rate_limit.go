@@ -28,6 +28,7 @@ func newRateLimitTransport(l log.Logger, state *rateLimitState, next http.RoundT
 }
 
 func (t *rateLimitTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	t.state.waitForGate(r.Context())
 	t.state.waitIfNeeded(r.Context())
 
 	resp, err := t.next.RoundTrip(r)
