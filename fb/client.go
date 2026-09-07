@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -324,50 +323,27 @@ func (c *Client) Delete(ctx context.Context, url string) error {
 	return nil
 }
 
-// UploadFile uses a multipart form for uploading a file from r.
+// UploadFile uses a multipart form for uploading a file from r. The file is
+// streamed rather than buffered: a seekable reader is sent in place, anything
+// else is spooled once to disk, and retries replay from that source.
 func (c *Client) UploadFile(ctx context.Context, url, name string, r io.Reader, additionalFields map[string]string, res interface{}) error {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	for k, v := range additionalFields {
-		w, err := bodyWriter.CreateFormField(k)
-		if err != nil {
-			return fmt.Errorf("err adding additional field '%s': %w", k, err)
-		}
-
-		_, err = io.Copy(w, strings.NewReader(v))
-		if err != nil {
-			return fmt.Errorf("err writing additional field '%s': %w", k, err)
-		}
-	}
-
-	fileWriter, err := bodyWriter.CreateFormFile("video_file_chunk", name)
+	src, err := newUploadSource(r)
 	if err != nil {
 		return err
 	}
-
-	_, err = io.Copy(fileWriter, r)
-	if err != nil {
-		return err
-	}
-
-	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
-
-	b := bodyBuf.Bytes()
+	defer func() { _ = src.close() }()
 
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = 6 * time.Second
 	bo.MaxElapsedTime = 5 * time.Minute
 
 	return backoff.Retry(func() error {
-		request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
+		request, err := newMultipartRequest(ctx, url, "video_file_chunk", name, additionalFields, src)
 		if err != nil {
-			return err
+			return backoff.Permanent(err)
 		}
-		request.Header.Set("Content-Type", contentType)
 
-		resp, err := c.Client.Do(request.WithContext(ctx))
+		resp, err := c.Client.Do(request)
 		if err != nil {
 			return err
 		}
