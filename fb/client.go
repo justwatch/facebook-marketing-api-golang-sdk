@@ -18,29 +18,69 @@ import (
 	"github.com/go-kit/log/level"
 )
 
-// reduceLimit parses the URL, halves the limit query parameter, and returns the modified URL.
-// Returns false if the limit is already at 1 or not present.
-func reduceLimit(rawURL string) (string, bool) {
+func queryParam(rawURL, key string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return ""
+	}
+
+	return u.Query().Get(key)
+}
+
+// nextAfterReduceData halves the page limit on Meta's "reduce the amount of data" error and, once a single object still fails, skips it.
+func (c *Client) nextAfterReduceData(ctx context.Context, rawURL, lastLimit string) (string, bool) {
 	u, err := url.Parse(rawURL)
 	if err != nil {
 		return "", false
 	}
 
 	q := u.Query()
-	limitStr := q.Get("limit")
-	if limitStr == "" {
+	limit, err := strconv.Atoi(q.Get("limit"))
+	if err != nil {
 		return "", false
 	}
+	if limit > 1 {
+		q.Set("limit", strconv.Itoa(limit/2))
+		u.RawQuery = q.Encode()
 
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 1 {
-		return "", false
+		return u.String(), true
 	}
 
-	q.Set("limit", strconv.Itoa(limit/2))
+	fields := q.Get("fields")
+	q.Set("fields", "id")
 	u.RawQuery = q.Encode()
+	resp := &listElementsResponse{}
+	if err := c.GetJSON(ctx, u.String(), resp); err != nil {
+		return "", false
+	}
+	skipped := make([]string, len(resp.Data))
+	for i, d := range resp.Data {
+		skipped[i] = string(d)
+	}
+	_ = level.Warn(c.l).Log("msg", "skipping object Meta cannot return with the requested fields", "path", u.Path, "skipped", strings.Join(skipped, ","))
 
-	return u.String(), true
+	next := resp.Paging.Paging.Next
+	if next == "" {
+		return "", true
+	}
+	nu, err := url.Parse(next)
+	if err != nil {
+		return "", false
+	}
+	nq := nu.Query()
+	if fields == "" {
+		nq.Del("fields")
+	} else {
+		nq.Set("fields", fields)
+	}
+	if lastLimit == "" {
+		nq.Del("limit")
+	} else {
+		nq.Set("limit", lastLimit)
+	}
+	nu.RawQuery = nq.Encode()
+
+	return nu.String(), true
 }
 
 // Client holds an http.Client and provides additional functionality.
@@ -140,18 +180,20 @@ func (c *Client) GetJSON(ctx context.Context, url string, res interface{}) error
 // GetList uses reflection to append to res when the result is a list.
 func (c *Client) GetList(ctx context.Context, u string, res interface{}) error {
 	stats := StatFromContext(ctx)
+	limit := queryParam(u, "limit")
 	for u != "" {
 		resp := &listResponse{}
 		err := c.GetJSON(ctx, u, resp)
 		if err != nil {
 			if IsReduceData(err) {
-				if reduced, ok := reduceLimit(u); ok {
-					u = reduced
+				if next, ok := c.nextAfterReduceData(ctx, u, limit); ok {
+					u = next
 					continue
 				}
 			}
 			return err
 		}
+		limit = queryParam(u, "limit")
 
 		n, err := appendJSON(resp.Data, res)
 		if err != nil {
@@ -171,18 +213,20 @@ func (c *Client) GetList(ctx context.Context, u string, res interface{}) error {
 // ReadList writes json.RawMessage to a chan when the response is a list.
 func (c *Client) ReadList(ctx context.Context, u string, res chan<- json.RawMessage) error {
 	stats := StatFromContext(ctx)
+	limit := queryParam(u, "limit")
 	for u != "" {
 		resp := &listElementsResponse{}
 		err := c.GetJSON(ctx, u, resp)
 		if err != nil {
 			if IsReduceData(err) {
-				if reduced, ok := reduceLimit(u); ok {
-					u = reduced
+				if next, ok := c.nextAfterReduceData(ctx, u, limit); ok {
+					u = next
 					continue
 				}
 			}
 			return err
 		}
+		limit = queryParam(u, "limit")
 
 		for _, d := range resp.Data {
 			res <- d
