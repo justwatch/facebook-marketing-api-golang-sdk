@@ -345,13 +345,23 @@ func (r Results) Indicator() string {
 	return r[0].Indicator
 }
 
-// GetValue returns the sum of all result values.
+// GetValue returns the result value of the ad set's own attribution setting (the "default" attribution window).
+// When action_attribution_windows are requested Meta returns one value per window; without them only "default" is returned.
 func (r Results) GetValue() float64 {
 	var value float64
 	for _, res := range r {
-		for _, v := range res.Values {
-			value += v.Value
+		if len(res.Values) == 0 {
+			continue
 		}
+		v := res.Values[0].Value
+		for _, candidate := range res.Values {
+			for _, window := range candidate.AttributionWindows {
+				if window == "default" {
+					v = candidate.Value
+				}
+			}
+		}
+		value += v
 	}
 
 	return value
