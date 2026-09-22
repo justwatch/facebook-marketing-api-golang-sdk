@@ -18,6 +18,7 @@ type Service struct {
 	AdCreatives       *AdCreativeService
 	Adsets            *AdsetService
 	Ads               *AdService
+	AdsPixels         *AdsPixelService
 	Audiences         *AudienceService
 	Campaigns         *CampaignService
 	CustomConversions *CustomConversionService
@@ -55,6 +56,7 @@ func NewWithClient(l log.Logger, c *fb.Client) (*Service, error) {
 		AdCreatives:       &AdCreativeService{c, fb.NewStatsContainer()},
 		Adsets:            &AdsetService{c},
 		Ads:               &AdService{c},
+		AdsPixels:         &AdsPixelService{c},
 		Audiences:         &AudienceService{c},
 		Campaigns:         &CampaignService{c},
 		CustomConversions: &CustomConversionService{c},

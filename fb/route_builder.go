@@ -177,6 +177,17 @@ func (rb *RouteBuilder) Since(t time.Time) *RouteBuilder {
 	return rb
 }
 
+// StartTime sets the start_time param (unix timestamp) or deletes it when t is zero.
+func (rb *RouteBuilder) StartTime(t time.Time) *RouteBuilder {
+	if t.IsZero() {
+		rb.v.Del("start_time")
+	} else {
+		rb.v.Set("start_time", strconv.FormatInt(t.Unix(), 10))
+	}
+
+	return rb
+}
+
 // DatePreset sets date_preset param and deletes the time_range one.
 func (rb *RouteBuilder) DatePreset(s string) *RouteBuilder {
 	if s != "" {
