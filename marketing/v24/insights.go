@@ -240,6 +240,9 @@ func (ir *InsightsRequest) generateReportDirect(ctx context.Context, c chan<- In
 type Insight struct {
 	AccountID                        string                 `json:"account_id"`
 	Actions                          ActionTypeValue        `json:"actions"`
+	ActionValues                     ActionTypeValue        `json:"action_values"`
+	Results                          Results                `json:"results"`
+	OptimizationGoal                 string                 `json:"optimization_goal"`
 	AdsetID                          string                 `json:"adset_id"`
 	AdID                             string                 `json:"ad_id"`
 	Objective                        string                 `json:"objective"`
@@ -319,6 +322,46 @@ func (atv ActionTypeValue) GetValue(actionType string) float64 {
 		if a.ActionType == actionType {
 			value += a.Value
 		}
+	}
+
+	return value
+}
+
+// Results is the "results" insights field: the outcome the ad set optimises for, as shown in Ads Manager.
+type Results []struct {
+	Indicator string `json:"indicator"`
+	Values    []struct {
+		Value              float64  `json:"value,string"`
+		AttributionWindows []string `json:"attribution_windows"`
+	} `json:"values"`
+}
+
+// Indicator returns the indicator of the first result, e.g. "conversions:offsite_conversion.fb_pixel_purchase".
+func (r Results) Indicator() string {
+	if len(r) == 0 {
+		return ""
+	}
+
+	return r[0].Indicator
+}
+
+// GetValue returns the result value of the ad set's own attribution setting (the "default" attribution window).
+// When action_attribution_windows are requested Meta returns one value per window; without them only "default" is returned.
+func (r Results) GetValue() float64 {
+	var value float64
+	for _, res := range r {
+		if len(res.Values) == 0 {
+			continue
+		}
+		v := res.Values[0].Value
+		for _, candidate := range res.Values {
+			for _, window := range candidate.AttributionWindows {
+				if window == "default" {
+					v = candidate.Value
+				}
+			}
+		}
+		value += v
 	}
 
 	return value
