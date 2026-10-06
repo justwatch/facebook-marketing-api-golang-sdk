@@ -28,8 +28,8 @@ func (f *fakeSleep) totalDuration() time.Duration {
 
 func TestIsRateLimited(t *testing.T) {
 	cases := []struct {
-		code    uint64
-		subcode uint64
+		code    int64
+		subcode int64
 		want    bool
 	}{
 		{4, 0, true},
