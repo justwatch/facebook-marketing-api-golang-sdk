@@ -119,7 +119,8 @@ func (c *Client) handleResponse(resp *http.Response, res interface{}, req []byte
 	ec := &ErrorContainer{}
 	err := json.NewDecoder(io.TeeReader(resp.Body, buf)).Decode(ec)
 	if err != nil {
-		return err
+		// Keep the raw body: without it an undecodable Meta error hides the real message.
+		return fmt.Errorf("%w (status %s, body: %s)", err, resp.Status, truncate(buf.String(), 1000))
 	} else if err = ec.GetError(); err != nil {
 		c.handleError(err, resp, req)
 
@@ -418,4 +419,12 @@ func (c *Client) UploadFile(ctx context.Context, url, name string, r io.Reader, 
 
 		return c.handleResponse(resp, res, nil)
 	}, backoff.WithContext(bo, ctx))
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+
+	return s[:n] + "..."
 }

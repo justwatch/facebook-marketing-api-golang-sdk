@@ -34,8 +34,8 @@ type listElementsResponse struct {
 type Error struct {
 	Message        string          `json:"message"`
 	Type           string          `json:"type"`
-	Code           uint64          `json:"code"`
-	ErrorSubcode   uint64          `json:"error_subcode"`
+	Code           int64           `json:"code"`
+	ErrorSubcode   int64           `json:"error_subcode"`
 	FbtraceID      string          `json:"fbtrace_id"`
 	IsTransient    bool            `json:"is_transient"`
 	ErrorUserTitle string          `json:"error_user_title"`
