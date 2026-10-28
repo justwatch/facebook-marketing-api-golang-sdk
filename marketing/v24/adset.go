@@ -313,6 +313,7 @@ type TargetingRelaxationTypes struct {
 
 // FlexibleSpec is used for targeting
 type FlexibleSpec struct {
+	CustomAudiences      []IDContainer `json:"custom_audiences,omitempty"`
 	Interests            []IDContainer `json:"interests,omitempty"`
 	Behaviors            []IDContainer `json:"behaviors,omitempty"`
 	LifeEvents           []IDContainer `json:"life_events,omitempty"`
