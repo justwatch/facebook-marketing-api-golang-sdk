@@ -2,8 +2,6 @@ package v22
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/justwatch/facebook-marketing-api-golang-sdk/fb"
 )
@@ -79,20 +77,20 @@ func (cs *CampaignService) Get(ctx context.Context, id string, fields ...string)
 // Create uploads a new campaign, returns the fields and returns the created campaign.
 func (cs *CampaignService) Create(ctx context.Context, c Campaign) (string, error) {
 	if c.ID != "" {
-		return "", fmt.Errorf("cannot create campaign that already exists: %s", c.ID)
+		return "", &AlreadyExistsError{Entity: "Campaign", ID: c.ID}
 	} else if c.AccountID == "" {
-		return "", errors.New("cannot create campaign without account id")
+		return "", &MissingFieldError{Entity: "Campaign", Field: "AccountID"}
 	}
 
 	res := &fb.MinimalResponse{}
 	url := fb.NewRoute(Version, "/act_%s/campaigns", c.AccountID).String()
 	err := cs.c.PostJSON(ctx, url, c, res)
 	if err != nil {
-		return "", fmt.Errorf("could not POST to %q: %w", url, err)
+		return "", &UpstreamError{Op: "Create", Route: url, Err: err}
 	} else if err = res.GetError(); err != nil {
-		return "", fmt.Errorf("got error response from POST to %q: %w", url, err)
+		return "", &RemoteAPIError{Op: "Create", Route: url, Detail: err.Error()}
 	} else if res.ID == "" {
-		return "", fmt.Errorf("creating campaign failed")
+		return "", ErrCreateFailed
 	}
 
 	return res.ID, nil
@@ -101,17 +99,18 @@ func (cs *CampaignService) Create(ctx context.Context, c Campaign) (string, erro
 // Update updates an campaign.
 func (cs *CampaignService) Update(ctx context.Context, c Campaign) error {
 	if c.ID == "" {
-		return errors.New("cannot update a campaign without id")
+		return &MissingFieldError{Entity: "Campaign", Field: "ID"}
 	}
 
 	res := &fb.MinimalResponse{}
-	err := cs.c.PostJSON(ctx, fb.NewRoute(Version, "/%s", c.ID).String(), c, res)
+	url := fb.NewRoute(Version, "/%s", c.ID).String()
+	err := cs.c.PostJSON(ctx, url, c, res)
 	if err != nil {
-		return err
+		return &UpstreamError{Op: "Update", Route: url, Err: err}
 	} else if err = res.GetError(); err != nil {
-		return err
+		return &RemoteAPIError{Op: "Update", Route: url, Detail: err.Error()}
 	} else if !res.Success && res.ID == "" {
-		return fmt.Errorf("updating the campaign failed")
+		return ErrUpdateFailed
 	}
 
 	return nil
