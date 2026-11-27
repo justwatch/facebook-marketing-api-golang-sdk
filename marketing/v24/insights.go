@@ -240,6 +240,7 @@ func (ir *InsightsRequest) generateReportDirect(ctx context.Context, c chan<- In
 type Insight struct {
 	AccountID                        string                 `json:"account_id"`
 	Actions                          ActionTypeValue        `json:"actions"`
+	Results                          Results                `json:"results"`
 	AdsetID                          string                 `json:"adset_id"`
 	AdID                             string                 `json:"ad_id"`
 	Objective                        string                 `json:"objective"`
@@ -294,6 +295,28 @@ func (i Insight) GetAge() (uint64, uint64, error) {
 	}
 
 	return minAge, maxAge, nil
+}
+
+type Results []struct {
+	Indicator string `json:"indicator"`
+	Values    []struct {
+		Value              float64  `json:"value,string"`
+		AttributionWindows []string `json:"attribution_windows"`
+	} `json:"values"`
+}
+
+func (r Results) GetDefault() (string, float64) {
+	for _, result := range r {
+		for _, value := range result.Values {
+			if len(value.AttributionWindows) == 0 || value.AttributionWindows[0] == "default" {
+				return result.Indicator, value.Value
+			}
+		}
+
+		return result.Indicator, 0
+	}
+
+	return "", 0
 }
 
 // ActionTypeValue is a kv store.
